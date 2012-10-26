@@ -21,12 +21,11 @@ vector<Index::PosSize> Index::ExtractKeywords(const string& content,
                                               const size_t end) {
   using std::isalnum;
 
-  const size_t content_size = content.size();
-  assert(beg < end && end <= content_size);
-
   // Keyword density approximation.
   static float density = 1.0f / kMinKeywordSize;
 
+  const size_t content_size = content.size();
+  assert(beg < end && end <= content_size);
   vector<PosSize> keywords;
   keywords.reserve(content_size * density * 1.5f);
   size_t pos = beg;
@@ -111,6 +110,16 @@ void Index::AddRecordsFromCsvFile(const string& filename,
 Index::Index()
     : num_items_(0u) {}
 
+const vector<Index::Item>& Index::Items(const string& keyword) const {
+  static vector<Item> kEmptyList;
+
+  auto it = index_.find(keyword);
+  if (it == index_.end()) {
+    return kEmptyList;
+  }
+  return it->second;
+}
+
 int Index::AddRecord(const string& url, const string& content) {
   // TODO(esawin): Check for duplicates.
   records_.push_back({url, content});
@@ -126,6 +135,14 @@ int Index::AddItem(const string& keyword, const int record_id,
 
 void Index::ReserveRecords(const size_t num) {
   records_.reserve(num);
+}
+
+size_t Index::NumRecords() const {
+  return records_.size();
+}
+
+size_t Index::NumItems() const {
+  return num_items_;
 }
 
 void Index::OutputInvertedListLengths() const {

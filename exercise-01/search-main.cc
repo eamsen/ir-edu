@@ -8,7 +8,10 @@
 #include "../clock.h"
 
 using std::cout;
+using std::cin;
+using std::getline;
 using std::endl;
+using std::flush;
 using std::string;
 using std::ifstream;
 
@@ -48,6 +51,12 @@ int main(int argc, char** argv) {
   auto end = Clock();
   Profiler::Stop();
   auto diff = end - start;
-  cout << "Index construction duration: " << Clock::DiffStr(diff) << endl;
+  cout << "Number of records: " << index.NumRecords();
+  cout << "\nNumber of items: " << index.NumItems();
+  cout << "\nIndex construction duration: " << Clock::DiffStr(diff);
   // index.OutputInvertedListLengths();
+  cout << "\n\nSearch : " << flush;
+  string query;
+  getline(cin, query);
+  cout << "\n" << query << endl;
 }

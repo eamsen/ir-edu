@@ -55,6 +55,9 @@ class Index {
   // Default index initialization.
   Index();
 
+  // Returns a const reference to the items list for given keyword.
+  const std::vector<Item>& Items(const std::string& keyword) const;
+
   // Adds the record to the index.
   // Returns the new record id.
   int AddRecord(const std::string& url, const std::string& content);
@@ -67,6 +70,12 @@ class Index {
 
   // Reserves space for given number of records.
   void ReserveRecords(const size_t num);
+
+  // Returns the number of records indexed.
+  size_t NumRecords() const;
+
+  // Returns the total number of items (keyword occurences) indexed.
+  size_t NumItems() const;
 
   // Write inverted lists lengths to standard output.
   void OutputInvertedListLengths() const;

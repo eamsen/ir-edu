@@ -1,34 +1,31 @@
-// Copyright 2012, University of Freiburg,
 // Copyright 2012 Eugen Sawin <esawin@me73.com>
 #ifndef EXERCISE_01_QUERY_PROCESSOR_H_
 #define EXERCISE_01_QUERY_PROCESSOR_H_
-// Chair of Algorithms and Data Structures.
-// Author: Hannah Bast <bast@informatik.uni-freiburg.de>.
 
-// NOTE: this is a code design suggestion in pseudo-code. It is not supposed to
-// be compilable in any language. You have to translate it to Java or C++
-// yourself.
+#include <string>
+#include <vector>
+#include "./inverted-index.h"
+
+class Index;
 
 // Class for processing queries with two keywords based on an inverted index.
 class QueryProcessor {
-  // PUBLIC MEMBERS.
+ public:
+  // Initializes the query processor for given index.
+  explicit QueryProcessor(const Index& index);
 
-  // Construct for given inverted index. Make sure that the class only stores a
-  // reference to the given index, and not a copy!
-  // QueryProcessor(Index index);
+  // Returns the matching record ids for given query.
+  std::vector<Index::Item> Answer(const std::string& query,
+                          const int max_num_records) const;
 
-  // Answer given query. Return URLs and contents of k matching records (or less
-  // if less records match), one string per record.
-  // Note: you can also return a pair of strings for each record, that might be
-  // nicer for the calling method.
-  // Array<String> void answerQuery(String query, int k);
+ private:
+  typedef std::vector<Index::Item> ItemVec;
 
-  // PRIVATE MEMBERS.
+  // Intersects inverted lists and returns the result list.
+  static ItemVec Intersect(const std::vector<const ItemVec*>& lists,
+                           const int max_num);
 
-  // Intersect two inverted lists and return the result list.
-  // Array<int> intersect(Array<int> list1, Array<int> list2);
+  const Index& index_;
+};
 
-  // The inverted index.
-  // Index index.
-}
 #endif  // EXERCISE_01_QUERY_PROCESSOR_H_
