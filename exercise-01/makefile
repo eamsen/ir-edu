@@ -1,6 +1,6 @@
 CXX:=g++ -std=c++0x
 CFLAGS:=-O3 -Wall
-LIBS:= 
+LIBS:=-lrt
 TESTLIBS:=-lgtest -lgtest_main -lpthread
 MAIN_BINARIES:=$(basename $(wildcard *main.cc))
 TEST_BINARIES:=$(basename $(wildcard *test.cc))

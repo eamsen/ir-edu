@@ -1,4 +1,5 @@
 // Copyright 2012, University of Freiburg,
+// Copyright 2012 Eugen Sawin <esawin@me73.com>
 #ifndef EXERCISE_01_QUERY_PROCESSOR_H_
 #define EXERCISE_01_QUERY_PROCESSOR_H_
 // Chair of Algorithms and Data Structures.

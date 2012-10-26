@@ -9,6 +9,7 @@
 // The inverted index holding a mapping from keywords (prefixes) to records.
 class Index {
  public:
+  // A record consists of its url and the content text.
   struct Record {
     Record(const std::string& url, const std::string& content)
         : url(url), content(content) {}
@@ -17,40 +18,61 @@ class Index {
     std::string content;
   };
 
+  // Intermediate keyword position structure used during extraction.
   struct PosSize {
     size_t pos;
     size_t size;
   };
 
+  // An item depicts an occurence of a keyword within a record at some position.
+  struct Item {
+    int record_id;
+    size_t pos;
+  };
+
+  // The minimum size for a valid keyword.
   static const size_t kMinKeywordSize;
+
+  // Invalid index value, used for record ids.
   static const int kInvalidId;
 
+  // Finds all valid keywords within given content string and returns their
+  // position and sizes.
   static std::vector<PosSize>
     ExtractKeywords(const std::string& content, const size_t beg,
                     const size_t end);
 
-  // Creates an inverted index from given csv file of records in the format
+  // Adds all records and items from given CSV content, if the file format is:
   // <url>\t<content>\n
-  static void AddRecordsFromCsvFile(const std::string& file_name,
+  static void AddRecordsFromCsv(const std::string& file_content,
+                                Index* inverted_index);
+
+  // Adds all records and items from given CSV file, if the file format is:
+  // <url>\t<content>\n
+  static void AddRecordsFromCsvFile(const std::string& filename,
                                     Index* inverted_index);
 
+  // Default index initialization.
   Index();
 
-  // Adds the record to the index by processing its contents.
+  // Adds the record to the index.
   // Returns the new record id.
   int AddRecord(const std::string& url, const std::string& content);
 
-  // Adds the item with given keywrod and record id to the index.
+  // Adds the item with given keyword, record id and its position within the
+  // record to the index.
   // Returns the new total number of items in the index.
-  int AddItem(const std::string& keyword, const int record_id);
+  int AddItem(const std::string& keyword, const int record_id,
+              const size_t pos);
 
-  int KeywordId(const std::string& keyword) const;
+  // Reserves space for given number of records.
+  void ReserveRecords(const size_t num);
 
   // Write inverted lists lengths to standard output.
   void OutputInvertedListLengths() const;
 
  private:
-  std::unordered_map<std::string, std::vector<int> > index_;
+  std::unordered_map<std::string, std::vector<Item> > index_;
   std::vector<Record> records_;
   size_t num_items_;
 };
