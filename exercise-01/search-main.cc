@@ -1,9 +1,8 @@
-// Copyright 2012, University of Freiburg,
-// Chair of Algorithms and Data Structures.
-// Author: Hannah Bast <bast@informatik.uni-freiburg.de>.
+// Copyright 2012 Eugen Sawin <esawin@me73.com>
 
 #include <string>
 #include "./inverted-index.h"
+#include "../profiler.h"
 
 using std::string;
 
@@ -16,6 +15,8 @@ int main(int argc, char** argv) {
   }
   const string filename = argv[1];
   Index index;
+  Profiler::Start("csv-parse.prof");
   Index::AddRecordsFromCsvFile(filename, &index);
+  Profiler::Stop();
   // index.OutputInvertedListLengths();
 }

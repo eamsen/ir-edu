@@ -1,34 +1,48 @@
-CXX = g++ -O3 -Wall -std=c++0x
-MAIN_BINARIES = $(basename $(wildcard *main.cc))
-TEST_BINARIES = $(basename $(wildcard *test.cc))
-HEADER = $(wildcard *.h)
-OBJECTS = inverted-index.o
+CXX:=g++ -std=c++0x
+CFLAGS:=-O3 -Wall
+LIBS:= 
+TESTLIBS:=-lgtest -lgtest_main -lpthread
+MAIN_BINARIES:=$(basename $(wildcard *main.cc))
+TEST_BINARIES:=$(basename $(wildcard *test.cc))
+HEADER:=$(wildcard *.h)
+OBJECTS:=inverted-index.o
 
 .PRECIOUS: %.o
 
-all: compile test checkstyle
+all: compile check checkstyle
 
 compile: $(MAIN_BINARIES) $(TEST_BINARIES)
 
-test: $(TEST_BINARIES)
-	for T in $(TEST_BINARIES); do ./$$T; done
+profile: CFLAGS=-Wall -O3 -DPROFILE
+profile: LIBS+=-lprofiler
+profile: clean compile
+
+debug: CFLAGS=-O0 -g
+debug: compile
+
+check: $(TEST_BINARIES)
+	@for T in $(TEST_BINARIES); do ./$$T; done
 
 checkstyle:
-	python ../cpplint.py *.h *.cc
+	@python ../cpplint.py *.h *.cc
 
 clean:
-	rm -f *.o
-	rm -f $(MAIN_BINARIES)
-	rm -f $(TEST_BINARIES)
-	rm -f *.class
-	rm -f *Test.TMP.*
-	rm -f core
+	@rm -f *.o
+	@rm -f $(MAIN_BINARIES)
+	@rm -f $(TEST_BINARIES)
+	@rm -f *.class
+	@rm -f *Test.TMP.*
+	@rm -f core
+	@echo "cleaned"
 
 %main: %main.o $(OBJECTS)
-	$(CXX) -o $@ $^
+	@$(CXX) $(CFLAGS) -o $@ $^ $(LIBS)
+	@echo "build $@"
 
 %test: %test.o $(OBJECTS)
-	$(CXX) -o $@ $^ -lgtest -lgtest_main -lpthread
+	@$(CXX) $(CFLAGS) -o $@ $^ $(TESTLIBS)
+	@echo "build $@"
 
 %.o: %.cc $(HEADER)
-	$(CXX) -c $<
+	@$(CXX) $(CFLAGS) -c $<
+	@echo "compiled $<"
