@@ -44,13 +44,9 @@ vector<Index::Item> QueryProcessor::Answer(const string& query,
 
 QueryProcessor::ItemVec QueryProcessor::Intersect(
     const vector<const QueryProcessor::ItemVec*>& lists, const int max_num) {
-  using std::priority_queue;
-  using std::pair;
   using std::make_pair;
-  using std::greater;
-
-  typedef priority_queue<pair<int, int>, vector<pair<int, int> >,
-                         greater<pair<int, int> > > Queue;
+  typedef std::priority_queue<std::pair<int, int>, vector<std::pair<int, int> >,
+                              std::greater<std::pair<int, int> > > Queue;
 
   const size_t num_lists = lists.size();
   vector<int> indices(num_lists, 0);
@@ -63,25 +59,31 @@ QueryProcessor::ItemVec QueryProcessor::Intersect(
   vector<Index::Item> results;
   results.reserve(max_total);
   vector<Index::Item> matched_items(num_lists);
-  while (queue.size() && results.size() < max_total) {
+  while (queue.size()) {
     const int record_id = queue.top().first;
     const int list = queue.top().second;
     queue.pop();
+    if (results.size() && results.back().record_id == record_id) {
+      // Current item is another match for an approved intersection.
+      results.push_back((*lists[list])[indices[list]]);
+    } else {
+      // Test whether the item itersects.
+      size_t l = 0;
+      while (l < num_lists && (*lists[l])[indices[l]].record_id == record_id) {
+        matched_items[l] = (*lists[l])[indices[l]];
+        ++l;
+      }
+      if (l == num_lists) {
+        // Intersection found.
+        for (auto it = matched_items.cbegin(), end = matched_items.cend();
+             it != end; ++it) {
+          results.push_back(*it);
+        }
+      }
+    }
     if (indices[list] + 1u < lists[list]->size()) {
       // Increment the list index for active list.
       queue.push(make_pair((*lists[list])[++indices[list]].record_id, list));
-    }
-    size_t l = 0;
-    while (l < num_lists && (*lists[l])[indices[l]].record_id == record_id) {
-      matched_items[l] = (*lists[l])[indices[l]];
-      ++l;
-    }
-    if (l == num_lists) {
-      // Match found.
-      for (auto it = matched_items.cbegin(), end = matched_items.cend();
-           it != end; ++it) {
-        results.push_back(*it);
-      }
     }
   }
   return results;

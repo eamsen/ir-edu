@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <fstream>
+#include <sstream>
 #include <queue>
 #include "./inverted-index.h"
 #include "./query-processor.h"
@@ -84,11 +85,17 @@ void WriteRecord(const Index::Record& record,
 // Main function.
 int main(int argc, char** argv) {
   // Parse command line arguments.
-  if (argc != 2) {
-    printf("Usage: search-main <name of collection CSV file>\n");
-    exit(1);
+  if (argc != 2 && argc != 3) {
+    cout << "Usage: search-main <CSV-file> [<num-records>]" << endl;
+    return 1;
   }
   const string filename = argv[1];
+  int max_num_records = 3;
+  if (argc == 3) {
+    std::stringstream ss;
+    ss << argv[2];
+    ss >> max_num_records;
+  }
   Index index;
   Profiler::Start("index-construction.prof");
   auto start = Clock();
@@ -114,18 +121,20 @@ int main(int argc, char** argv) {
     }
 
     QueryProcessor proc(index);
-    vector<Index::Item> results = proc.Answer(query, 3);
+    vector<Index::Item> results = proc.Answer(query, max_num_records);
     if (results.size() == 0) {
       cout << kBoldText << "\nNothing found\n" << kResetMode;
     }
 
+    int num_records = 0;
     vector<pair<size_t, size_t> > matches;
     int prev_record_id = Index::kInvalidId;
-    while (results.size()) {
+    while (results.size() && num_records < max_num_records - 1) {
       const Index::Item& item = results.back();
       if (item.record_id != prev_record_id && matches.size()) {
         const Index::Record& record = index.RecordById(prev_record_id);
         WriteRecord(record, matches, &cout);
+        ++num_records;
         matches.clear();
       }
       matches.push_back(make_pair(item.pos, item.size));
@@ -137,5 +146,5 @@ int main(int argc, char** argv) {
       WriteRecord(record, matches, &cout);
     }
   }
-  cout << endl;
+  cout << "Bye!" << endl;
 }
