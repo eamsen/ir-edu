@@ -122,8 +122,14 @@ int main(int argc, char** argv) {
 
     QueryProcessor proc(index);
     vector<Index::Item> results = proc.Answer(query, max_num_records);
+    const size_t records_found = proc.LastRecordsFound();
+    auto const duration = proc.LastDuration();
     if (results.size() == 0) {
-      cout << kBoldText << "\nNothing found\n" << kResetMode;
+      cout << kBoldText << "\nNothing found in "
+           << Clock::DiffStr(duration) << "\n" << kResetMode;
+    } else {
+      cout << "Found " << records_found << " records in "
+           << Clock::DiffStr(duration) << "\n";
     }
 
     int num_records = 0;

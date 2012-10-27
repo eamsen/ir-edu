@@ -25,10 +25,13 @@ vector<string> Split(const string& content, const string& delims) {
 }
 
 QueryProcessor::QueryProcessor(const Index& index)
-    : index_(index) {}
+    : index_(index),
+      last_num_records_(0),
+      last_duration_(0u) {}
 
 vector<Index::Item> QueryProcessor::Answer(const string& query,
                                            const int max_num_records) const {
+  auto const beg = Clock();
   vector<const vector<Index::Item>*> lists;
   vector<string> keywords = Split(query, kWhitespace);
   for (auto it = keywords.cbegin(), end = keywords.cend();
@@ -39,15 +42,19 @@ vector<Index::Item> QueryProcessor::Answer(const string& query,
       lists.push_back(&items);
     }
   }
-  return Intersect(lists, max_num_records);
+  vector<Index::Item> results = Intersect(lists, max_num_records);
+  last_duration_ = Clock() - beg;
+  return results;
 }
 
 QueryProcessor::ItemVec QueryProcessor::Intersect(
-    const vector<const QueryProcessor::ItemVec*>& lists, const int max_num) {
+    const vector<const QueryProcessor::ItemVec*>& lists,
+    const int max_num) const {
   using std::make_pair;
   typedef std::priority_queue<std::pair<int, int>, vector<std::pair<int, int> >,
                               std::greater<std::pair<int, int> > > Queue;
 
+  last_num_records_ = 0u;
   const size_t num_lists = lists.size();
   vector<int> indices(num_lists, 0);
   Queue queue;
@@ -75,6 +82,7 @@ QueryProcessor::ItemVec QueryProcessor::Intersect(
       }
       if (l == num_lists) {
         // Intersection found.
+        ++last_num_records_;
         for (auto it = matched_items.cbegin(), end = matched_items.cend();
              it != end; ++it) {
           results.push_back(*it);
@@ -87,4 +95,12 @@ QueryProcessor::ItemVec QueryProcessor::Intersect(
     }
   }
   return results;
+}
+
+size_t QueryProcessor::LastRecordsFound() const {
+  return last_num_records_;
+}
+
+Clock::Diff QueryProcessor::LastDuration() const {
+  return last_duration_;
 }

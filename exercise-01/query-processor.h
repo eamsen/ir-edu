@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include "./inverted-index.h"
+#include "../clock.h"
 
 class Index;
 
@@ -18,14 +19,19 @@ class QueryProcessor {
   std::vector<Index::Item> Answer(const std::string& query,
                           const int max_num_records) const;
 
+  size_t LastRecordsFound() const;
+  Clock::Diff LastDuration() const;
+
  private:
   typedef std::vector<Index::Item> ItemVec;
 
   // Intersects inverted lists and returns the result list.
-  static ItemVec Intersect(const std::vector<const ItemVec*>& lists,
-                           const int max_num);
+  ItemVec Intersect(const std::vector<const ItemVec*>& lists,
+                    const int max_num) const;
 
   const Index& index_;
+  mutable size_t last_num_records_;
+  mutable Clock::Diff last_duration_;
 };
 
 #endif  // EXERCISE_01_QUERY_PROCESSOR_H_
