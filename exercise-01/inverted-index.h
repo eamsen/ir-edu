@@ -28,6 +28,7 @@ class Index {
   struct Item {
     int record_id;
     size_t pos;
+    size_t size;
   };
 
   // The minimum size for a valid keyword.
@@ -54,6 +55,9 @@ class Index {
 
   // Default index initialization.
   Index();
+
+  // Returns a const reference to the record of given id.
+  const Record& RecordById(const int record_id) const;
 
   // Returns a const reference to the items list for given keyword.
   const std::vector<Item>& Items(const std::string& keyword) const;

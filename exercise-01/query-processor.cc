@@ -59,11 +59,18 @@ QueryProcessor::ItemVec QueryProcessor::Intersect(
     queue.push(make_pair((*lists[l])[indices[l]].record_id, l));
   }
 
+  const size_t max_total = num_lists * max_num;
   vector<Index::Item> results;
-  results.reserve(num_lists * max_num);
+  results.reserve(max_total);
   vector<Index::Item> matched_items(num_lists);
-  while (queue.size()) {
+  while (queue.size() && results.size() < max_total) {
     const int record_id = queue.top().first;
+    const int list = queue.top().second;
+    queue.pop();
+    if (indices[list] + 1u < lists[list]->size()) {
+      // Increment the list index for active list.
+      queue.push(make_pair((*lists[list])[++indices[list]].record_id, list));
+    }
     size_t l = 0;
     while (l < num_lists && (*lists[l])[indices[l]].record_id == record_id) {
       matched_items[l] = (*lists[l])[indices[l]];

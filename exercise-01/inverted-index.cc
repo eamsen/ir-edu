@@ -110,6 +110,11 @@ void Index::AddRecordsFromCsvFile(const string& filename,
 Index::Index()
     : num_items_(0u) {}
 
+const Index::Record& Index::RecordById(const int record_id) const {
+  assert(record_id >= 0 && record_id < static_cast<int>(records_.size()));
+  return records_[record_id];
+}
+
 const vector<Index::Item>& Index::Items(const string& keyword) const {
   static vector<Item> kEmptyList;
 
@@ -129,7 +134,7 @@ int Index::AddRecord(const string& url, const string& content) {
 int Index::AddItem(const string& keyword, const int record_id,
                    const size_t pos) {
   // TODO(esawin): Check for duplicates and sort if required.
-  index_[keyword].push_back({record_id, pos});
+  index_[keyword].push_back({record_id, pos, keyword.size()});
   return ++num_items_;
 }
 
