@@ -47,8 +47,8 @@ vector<Index::Item> QueryProcessor::Answer(const string& query,
   return results;
 }
 
-QueryProcessor::ItemVec QueryProcessor::Intersect(
-    const vector<const QueryProcessor::ItemVec*>& lists,
+vector<Index::Item> QueryProcessor::Intersect(
+    const vector<const vector<Index::Item>*>& lists,
     const int max_num) const {
   using std::make_pair;
   typedef std::priority_queue<std::pair<int, int>, vector<std::pair<int, int> >,

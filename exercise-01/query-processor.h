@@ -27,11 +27,10 @@ class QueryProcessor {
   Clock::Diff LastDuration() const;
 
  private:
-  typedef std::vector<Index::Item> ItemVec;
-
   // Intersects inverted lists and returns the result list.
-  ItemVec Intersect(const std::vector<const ItemVec*>& lists,
-                    const int max_num) const;
+  std::vector<Index::Item> Intersect(
+      const std::vector<const std::vector<Index::Item>*>& lists,
+      const int max_num) const;
 
   const Index& index_;
   mutable size_t last_num_records_;
