@@ -16,7 +16,7 @@ class QueryProcessor {
   // Returns the matching record ids for given query.
   // Note: the max number of records argument is currently ignored.
   std::vector<Index::Item> Answer(const std::string& query,
-                          const int max_num_records) const;
+                                  const int max_num_records) const;
 
   // Returns the number of records found in the last call to Answer.
   size_t LastRecordsFound() const;
