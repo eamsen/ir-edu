@@ -1,5 +1,4 @@
 // Copyright 2012 Eugen Sawin <esawin@me73.com>
-
 #include <iostream>
 #include <string>
 #include <vector>

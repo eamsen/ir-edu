@@ -9,17 +9,21 @@
 
 class Index;
 
-// Class for processing queries with two keywords based on an inverted index.
+// Query processor based on an inverted index.
 class QueryProcessor {
  public:
   // Initializes the query processor for given index.
   explicit QueryProcessor(const Index& index);
 
   // Returns the matching record ids for given query.
+  // Note: the max number of records argument is currently ignored.
   std::vector<Index::Item> Answer(const std::string& query,
                           const int max_num_records) const;
 
+  // Returns the number of records found in the last call to Answer.
   size_t LastRecordsFound() const;
+
+  // Returns the duration of the llast query processing in microseconds.
   Clock::Diff LastDuration() const;
 
  private:
