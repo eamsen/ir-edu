@@ -7,8 +7,6 @@
 #include "./inverted-index.h"
 #include "../clock.h"
 
-class Index;
-
 // Query processor based on an inverted index.
 class QueryProcessor {
  public:
@@ -23,7 +21,7 @@ class QueryProcessor {
   // Returns the number of records found in the last call to Answer.
   size_t LastRecordsFound() const;
 
-  // Returns the duration of the llast query processing in microseconds.
+  // Returns the duration of the last query processing in microseconds.
   Clock::Diff LastDuration() const;
 
  private:
