@@ -1,6 +1,6 @@
 // Copyright 2012 Eugen Sawin <esawin@me73.com>
-#ifndef EXERCISE_01_QUERY_PROCESSOR_H_
-#define EXERCISE_01_QUERY_PROCESSOR_H_
+#ifndef EXERCISE_SHEET_01_QUERY_PROCESSOR_H_
+#define EXERCISE_SHEET_01_QUERY_PROCESSOR_H_
 
 #include <string>
 #include <vector>
@@ -14,6 +14,8 @@ class QueryProcessor {
   explicit QueryProcessor(const Index& index);
 
   // Returns the matching record ids for given query.
+  // The items are sorted by record id, with one item for each keyword
+  // occurrence (therefore possibly multiple items per record id).
   // Note: the max number of records argument is currently ignored.
   std::vector<Index::Item> Answer(const std::string& query,
                                   const int max_num_records) const;
@@ -35,4 +37,4 @@ class QueryProcessor {
   mutable Clock::Diff last_duration_;
 };
 
-#endif  // EXERCISE_01_QUERY_PROCESSOR_H_
+#endif  // EXERCISE_SHEET_01_QUERY_PROCESSOR_H_

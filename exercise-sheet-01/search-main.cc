@@ -11,11 +11,6 @@
 #include "../clock.h"
 
 using std::vector;
-using std::cout;
-using std::cin;
-using std::getline;
-using std::endl;
-using std::flush;
 using std::string;
 using std::ifstream;
 using std::ostream;
@@ -28,11 +23,6 @@ using std::make_pair;
 static const char* kResetMode = "\033[0m";
 static const char* kBoldText = "\033[1m";
 static const char* kUnderscoreText = "\033[4m";
-// static const char* kBlinkText = "\033[5m";
-// static const char* kReverseText = "\033[7m";
-// static const char* kConcealedText = "\033[8m";
-// static const char* kYellowText = "\033[0;33m";
-// static const char* kMagentaText = "\033[0;35m";
 
 size_t FileSize(const string& path) {
   ifstream stream(path.c_str());
@@ -81,8 +71,15 @@ void WriteRecord(const Index::Record& record,
   }
 }
 
+
 // Main function.
 int main(int argc, char** argv) {
+  using std::cout;
+  using std::cin;
+  using std::getline;
+  using std::endl;
+  using std::flush;
+
   // Parse command line arguments.
   if (argc != 2 && argc != 3) {
     cout << "Usage: search-main <CSV-file> [<num-records>]" << endl;
@@ -91,6 +88,8 @@ int main(int argc, char** argv) {
   const string filename = argv[1];
   int max_num_records = 3;
   if (argc == 3) {
+    // The second command-line argument sets the max number of records to be
+    // viewed.
     std::stringstream ss;
     ss << argv[2];
     ss >> max_num_records;
@@ -98,32 +97,39 @@ int main(int argc, char** argv) {
   Index index;
   Profiler::Start("index-construction.prof");
   auto start = Clock();
+  // Construct index from CSV file line by line.
   // Index::AddRecordsFromCsvFile(filename, &index);
+  // Alternative index construction by ready whole CSV file at once.
   Index::AddRecordsFromCsv(ReadFile(filename), &index);
   auto end = Clock();
   Profiler::Stop();
   auto diff = end - start;
+  // Output word frequencies, only required for exercise.
   // index.OutputInvertedListLengths();
   cout << "Number of records: " << index.NumRecords();
   cout << "\nNumber of items: " << index.NumItems();
   cout << "\nIndex construction duration: " << Clock::DiffStr(diff);
   cout << "\nType q to quit\n";
 
+  QueryProcessor proc(index);
   while (true) {
     string query;
+    // Get user query.
     cout << "\nSearch: " << kUnderscoreText << flush;
     getline(cin, query);
     cout << kResetMode;
 
     if (query == "q") {
+      // User has chosen to quit.
       break;
     }
 
-    QueryProcessor proc(index);
+    // Process query, get matching records.
     vector<Index::Item> results = proc.Answer(query, max_num_records);
     const size_t records_found = proc.LastRecordsFound();
     auto const duration = proc.LastDuration();
     if (results.size() == 0) {
+      // No records found.
       cout << kBoldText << "\nNothing found in "
            << Clock::DiffStr(duration) << "\n" << kResetMode;
     } else {
@@ -134,19 +140,27 @@ int main(int argc, char** argv) {
     int num_records = 0;
     vector<pair<size_t, size_t> > matches;
     int prev_record_id = Index::kInvalidId;
+    // Iterate over results to output all matching records.
+    // Result items are sorted by record ids, with each keyword occurrence
+    // resulting in one item.
     while (results.size() && num_records < max_num_records - 1) {
       const Index::Item& item = results.back();
       if (item.record_id != prev_record_id && matches.size()) {
+        // Found new record id, so we output the matches for the previous record
+        // id.
         const Index::Record& record = index.RecordById(prev_record_id);
         WriteRecord(record, matches, &cout);
         ++num_records;
         matches.clear();
       }
+      // Remember the keyword occurrence until all occurrences are collected for
+      // the current record id.
       matches.push_back(make_pair(item.pos, item.size));
       prev_record_id = item.record_id;
       results.pop_back();
     }
     if (matches.size()) {
+      // Output the results for the last record id.
       const Index::Record& record = index.RecordById(prev_record_id);
       WriteRecord(record, matches, &cout);
     }

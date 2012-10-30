@@ -1,6 +1,6 @@
 // Copyright 2012 Eugen Sawin <esawin@me73.com>
-#ifndef EXERCISE_01_INVERTED_INDEX_H_
-#define EXERCISE_01_INVERTED_INDEX_H_
+#ifndef EXERCISE_SHEET_01_INVERTED_INDEX_H_
+#define EXERCISE_SHEET_01_INVERTED_INDEX_H_
 
 #include <unordered_map>
 #include <string>
@@ -38,7 +38,8 @@ class Index {
   static const int kInvalidId;
 
   // Finds all valid keywords within given content string and returns their
-  // position and sizes.
+  // position and sizes. A keyword must contain at least one alphabetic
+  // character and have at least a set minimum size.
   static std::vector<PosSize>
     ExtractKeywords(const std::string& content, const size_t beg,
                     const size_t end);
@@ -90,4 +91,4 @@ class Index {
   size_t num_items_;
 };
 
-#endif  // EXERCISE_01_INVERTED_INDEX_H_
+#endif  // EXERCISE_SHEET_01_INVERTED_INDEX_H_

@@ -9,7 +9,7 @@ OBJECTS:=inverted-index.o query-processor.o
 
 .PRECIOUS: %.o
 
-all: compile check checkstyle
+all: compile test checkstyle
 
 compile: $(MAIN_BINARIES) $(TEST_BINARIES)
 
@@ -20,7 +20,7 @@ profile: clean compile
 debug: CFLAGS=-O0 -g
 debug: compile
 
-check: $(TEST_BINARIES)
+test: $(TEST_BINARIES)
 	@for T in $(TEST_BINARIES); do ./$$T; done
 
 checkstyle:
