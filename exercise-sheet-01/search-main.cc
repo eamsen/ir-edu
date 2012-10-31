@@ -1,4 +1,5 @@
 // Copyright 2012 Eugen Sawin <esawin@me73.com>
+#include <cassert>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -24,6 +25,7 @@ static const char* kResetMode = "\033[0m";
 static const char* kBoldText = "\033[1m";
 static const char* kUnderscoreText = "\033[4m";
 
+// Returns the file size of given file. Returns 0, if the file is not found.
 size_t FileSize(const string& path) {
   ifstream stream(path.c_str());
   size_t size = 0;
@@ -35,6 +37,7 @@ size_t FileSize(const string& path) {
   return size;
 }
 
+// Reads the whole file from given path and returns the content.
 string ReadFile(const string& path) {
   const size_t file_size = FileSize(path);
   string content;
@@ -44,6 +47,8 @@ string ReadFile(const string& path) {
   return content;
 }
 
+// Writes the given record to the given stream, highlighting the given matches.
+// Matches are given as (position, size) pairs.
 void WriteRecord(const Index::Record& record,
                  const vector<pair<size_t, size_t> >& matches,
                  ostream* stream) {
@@ -70,7 +75,6 @@ void WriteRecord(const Index::Record& record,
     *stream << record.content.substr(pos, record.content.size() - pos);
   }
 }
-
 
 // Main function.
 int main(int argc, char** argv) {
@@ -143,7 +147,7 @@ int main(int argc, char** argv) {
     // Iterate over results to output all matching records.
     // Result items are sorted by record ids, with each keyword occurrence
     // resulting in one item.
-    while (results.size() && num_records < max_num_records - 1) {
+    while (results.size() && num_records < max_num_records) {
       const Index::Item& item = results.back();
       if (item.record_id != prev_record_id && matches.size()) {
         // Found new record id, so we output the matches for the previous record
@@ -158,11 +162,6 @@ int main(int argc, char** argv) {
       matches.push_back(make_pair(item.pos, item.size));
       prev_record_id = item.record_id;
       results.pop_back();
-    }
-    if (matches.size()) {
-      // Output the results for the last record id.
-      const Index::Record& record = index.RecordById(prev_record_id);
-      WriteRecord(record, matches, &cout);
     }
   }
   cout << "Bye!" << endl;
