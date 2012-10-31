@@ -26,6 +26,9 @@ class Index {
 
   // An item depicts an occurence of a keyword within a record at some position.
   struct Item {
+    bool operator==(const Item& rhs) const {
+      return record_id == rhs.record_id && pos == rhs.pos && size == rhs.size;
+    }
     int record_id;
     size_t pos;
     size_t size;

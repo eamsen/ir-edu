@@ -39,6 +39,7 @@ vector<Index::Item> QueryProcessor::Answer(const string& query,
     const string& keyword = *it;
     const vector<Index::Item>& items = index_.Items(keyword);
     if (items.size()) {
+      // Consider this keyword's items, ignore unknown keywords.
       lists.push_back(&items);
     }
   }
@@ -65,7 +66,6 @@ vector<Index::Item> QueryProcessor::Intersect(
   const size_t max_total = num_lists * max_num;
   vector<Index::Item> results;
   results.reserve(max_total);
-  vector<Index::Item> matched_items(num_lists);
   while (queue.size()) {
     const int record_id = queue.top().first;
     const int list = queue.top().second;
@@ -77,16 +77,12 @@ vector<Index::Item> QueryProcessor::Intersect(
       // Test whether the item itersects.
       size_t l = 0;
       while (l < num_lists && (*lists[l])[indices[l]].record_id == record_id) {
-        matched_items[l] = (*lists[l])[indices[l]];
         ++l;
       }
       if (l == num_lists) {
-        // Intersection found.
+        // Intersection found; add the current item to the results.
         ++last_num_records_;
-        for (auto it = matched_items.cbegin(), end = matched_items.cend();
-             it != end; ++it) {
-          results.push_back(*it);
-        }
+        results.push_back((*lists[list])[indices[list]]);
       }
     }
     if (indices[list] + 1u < lists[list]->size()) {
