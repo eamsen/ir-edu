@@ -47,6 +47,8 @@ class IndexTest : public ::testing::Test {
                   "he was promised a large bonus for solving a problem and " +
                   "then after being successful was told the promise was a " +
                   "joke.\n";
+    urls_.push_back("Weird");
+    sentences_ += urls_.back() + "\tME73 37signals\n";
 
     Index::AddRecordsFromCsv(sentences_, &index_);
     ASSERT_EQ(urls_.size(), index_.NumRecords());
@@ -64,6 +66,32 @@ TEST_F(IndexTest, Records) {
   ASSERT_EQ(urls_.size(), index_.NumRecords());
   for (size_t i = 0; i < urls_.size(); ++i) {
     EXPECT_EQ(urls_[i], index_.RecordById(i).url);
+  }
+}
+
+TEST_F(IndexTest, noItems) {
+  {
+    const vector<Index::Item>& items = index_.Items("Nebuchad");
+    EXPECT_EQ(0, items.size());
+  }
+  {
+    const vector<Index::Item>& items = index_.Items("10");
+    EXPECT_EQ(0, items.size());
+  }
+  {
+    const vector<Index::Item>& items = index_.Items("2009");
+    EXPECT_EQ(0, items.size());
+  }
+}
+
+TEST_F(IndexTest, weirdItems) {
+  {
+    const vector<Index::Item>& items = index_.Items("ME73");
+    EXPECT_EQ(1, items.size());
+  }
+  {
+    const vector<Index::Item>& items = index_.Items("37signals");
+    EXPECT_EQ(1, items.size());
   }
 }
 

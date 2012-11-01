@@ -65,6 +65,41 @@ class QueryProcessorTest : public ::testing::Test {
 
 // Note: Currently keywords are case-sensitive, this might change in future
 // versions.
+TEST_F(QueryProcessorTest, emptyAnswer) {
+  QueryProcessor proc(index_);
+  {
+    vector<Index::Item> results = proc.Answer("Nebuchad", num_results_);
+    ASSERT_EQ(0, results.size());
+  }
+  {
+    vector<Index::Item> results = proc.Answer("atoms motor", num_results_);
+    ASSERT_EQ(0, results.size());
+  }
+}
+
+TEST_F(QueryProcessorTest, dirtyQuery) {
+  QueryProcessor proc(index_);
+  {
+    vector<Index::Item> results = proc.Answer("", num_results_);
+    ASSERT_EQ(0, results.size());
+  }
+  {
+    vector<Index::Item> results = proc.Answer("Tesla 33 Edison", num_results_);
+    ASSERT_EQ(4, results.size());
+    EXPECT_EQ(vector<Index::Item>({ {4, 0, 5}, {4, 24, 6},
+                                    {5, 47, 5}, {5, 77, 6} }),
+            results);
+  }
+  {
+    vector<Index::Item> results = proc.Answer("hmm? Tesla  \ta Edison",
+        num_results_);
+    ASSERT_EQ(4, results.size());
+    EXPECT_EQ(vector<Index::Item>({ {4, 0, 5}, {4, 24, 6},
+                                    {5, 47, 5}, {5, 77, 6} }),
+            results);
+  }
+}
+
 TEST_F(QueryProcessorTest, teslaAnswer) {
   QueryProcessor proc(index_);
   vector<Index::Item> results = proc.Answer("tesla", num_results_);
