@@ -1,6 +1,6 @@
 // Copyright 2012 Eugen Sawin <esawin@me73.com>
-#ifndef SRC_CLOCK_H_
-#define SRC_CLOCK_H_
+#ifndef EXERCISE_SHEET_01_CLOCK_H_
+#define EXERCISE_SHEET_01_CLOCK_H_
 
 #include <cstdint>
 #include <ctime>
@@ -90,5 +90,4 @@ class Clock {
   timespec time_;
 };
 
-#endif  // SRC_CLOCK_H_
-
+#endif  // EXERCISE_SHEET_01_CLOCK_H_

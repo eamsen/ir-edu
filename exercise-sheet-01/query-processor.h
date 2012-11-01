@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 #include "./inverted-index.h"
-#include "../clock.h"
+#include "./clock.h"
 
 // Query processor based on an inverted index.
 class QueryProcessor {

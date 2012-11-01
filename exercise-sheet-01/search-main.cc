@@ -8,8 +8,8 @@
 #include <queue>
 #include "./inverted-index.h"
 #include "./query-processor.h"
-#include "../profiler.h"
-#include "../clock.h"
+#include "./profiler.h"
+#include "./clock.h"
 
 using std::vector;
 using std::string;
