@@ -90,7 +90,7 @@ int main(int argc, char** argv) {
     return 1;
   }
   const string filename = argv[1];
-  int max_num_records = 3;
+  size_t max_num_records = 3;
   if (argc == 3) {
     // The second command-line argument sets the max number of records to be
     // viewed.
@@ -142,32 +142,33 @@ int main(int argc, char** argv) {
            << Clock::DiffStr(duration) << "\n";
     }
 
-    int num_records = 0;
+    size_t num_records = 0;
     vector<pair<size_t, size_t> > matches;
     int prev_record_id = Index::kInvalidId;
+    const size_t num_show_records = std::min(records_found, max_num_records);
     // Iterate over results to output all matching records.
-    // Result items are sorted by record ids, with each keyword occurrence
-    // resulting in one item.
-    while (results.size() && num_records < max_num_records) {
-      const Index::Item& item = results.back();
-      if (item.record_id != prev_record_id && matches.size()) {
-        // Found new record id, so we output the matches for the previous record
-        // id.
+    // Result items are sorted by record ids, with one item for each keyword
+    // occurrence.
+    while (num_records < num_show_records) {
+      if ((results.size() &&
+           results.back().record_id != prev_record_id &&
+           matches.size()) ||
+          results.empty()) {
+        // Found new/last record id, so we output the matches for the previous
+        // record id.
         const Index::Record& record = index.RecordById(prev_record_id);
         WriteRecord(record, matches, &cout);
         ++num_records;
         matches.clear();
       }
-      // Remember the keyword occurrence until all occurrences are collected for
-      // the current record id.
-      matches.push_back(make_pair(item.pos, item.size));
-      prev_record_id = item.record_id;
-      results.pop_back();
-    }
-    if (records_found == 1) {
-      // Output the only record found.
-      const Index::Record& record = index.RecordById(prev_record_id);
-      WriteRecord(record, matches, &cout);
+      if (results.size()) {
+        // Remember the keyword occurrence until all occurrences are
+        // collected for the current record id.
+        const Index::Item& item = results.back();
+        matches.push_back(make_pair(item.pos, item.size));
+        prev_record_id = item.record_id;
+        results.pop_back();
+      }
     }
   }
   cout << "Bye!" << endl;
