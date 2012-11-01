@@ -137,7 +137,8 @@ int main(int argc, char** argv) {
       cout << kBoldText << "\nNothing found in "
            << Clock::DiffStr(duration) << "\n" << kResetMode;
     } else {
-      cout << "Found " << records_found << " records in "
+      cout << "Found " << records_found << " record"
+           << (records_found > 1 ? "s" : "") << " in "
            << Clock::DiffStr(duration) << "\n";
     }
 
@@ -162,6 +163,11 @@ int main(int argc, char** argv) {
       matches.push_back(make_pair(item.pos, item.size));
       prev_record_id = item.record_id;
       results.pop_back();
+    }
+    if (records_found == 1) {
+      // Output the only record found.
+      const Index::Record& record = index.RecordById(prev_record_id);
+      WriteRecord(record, matches, &cout);
     }
   }
   cout << "Bye!" << endl;

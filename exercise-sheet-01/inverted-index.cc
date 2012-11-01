@@ -16,9 +16,8 @@ using std::vector;
 const size_t Index::kMinKeywordSize = 2;
 const int Index::kInvalidId = -1;
 
-vector<Index::PosSize> Index::ExtractKeywords(const string& content,
-                                              const size_t beg,
-                                              const size_t end) {
+auto Index::ExtractKeywords(const string& content, const size_t beg,
+                            const size_t end) -> vector<PosSize> {
   using std::isalnum;
 
   // Keyword density approximation.
@@ -115,7 +114,7 @@ const Index::Record& Index::RecordById(const int record_id) const {
   return records_[record_id];
 }
 
-const vector<Index::Item>& Index::Items(const string& keyword) const {
+auto Index::Items(const string& keyword) const -> const vector<Item>& {
   static vector<Item> kEmptyList;
 
   auto it = index_.find(keyword);

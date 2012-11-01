@@ -11,9 +11,6 @@ class Index {
  public:
   // A record consists of its url and the content text.
   struct Record {
-    Record(const std::string& url, const std::string& content)
-        : url(url), content(content) {}
-
     std::string url;
     std::string content;
   };
@@ -29,6 +26,7 @@ class Index {
     bool operator==(const Item& rhs) const {
       return record_id == rhs.record_id && pos == rhs.pos && size == rhs.size;
     }
+
     int record_id;
     size_t pos;
     size_t size;
@@ -42,7 +40,7 @@ class Index {
 
   // Finds all valid keywords within given content string and returns their
   // position and sizes. A keyword must contain at least one alphabetic
-  // character and have at least a set minimum size.
+  // character and have at least the minimum size.
   static std::vector<PosSize>
     ExtractKeywords(const std::string& content, const size_t beg,
                     const size_t end);
