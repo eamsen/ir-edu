@@ -17,3 +17,8 @@ Code comments:
     You can find them in the (hidden) .feedback/ directory in the corresponding
     exercise sub-directory.
     My code comments have the following syntax "// Note(esawin): <comment>".
+    
+Example implementations:
+  * For some of the exercises, I will make my own implementations available at
+    https://github.com/eamsen/information-retrieval-edu.
+    You are welcome to ask questions and provide critique!
