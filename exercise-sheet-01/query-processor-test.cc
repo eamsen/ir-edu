@@ -157,3 +157,14 @@ TEST_F(QueryProcessorTest, GoogleAnswer) {
   EXPECT_EQ(vector<Index::Item>({ {2, 18, 6}, {2, 102, 6} }),
             results);
 }
+
+TEST_F(QueryProcessorTest, LongQuery) {
+  QueryProcessor proc(index_);
+  string query = "Google birthday doodle Tesla Legacy";
+  vector<Index::Item> results = proc.Answer(query, num_results_);
+  ASSERT_EQ(6, results.size());
+  EXPECT_EQ(vector<Index::Item>({ {2, 18, 6}, {2, 102, 6},
+                                  {2, 47, 8}, {2, 88, 6},
+                                  {2, 34, 5}, {2, 0, 6} }),
+            results);
+}

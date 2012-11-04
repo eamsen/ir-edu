@@ -26,7 +26,7 @@ vector<string> Split(const string& content, const string& delims) {
 
 QueryProcessor::QueryProcessor(const Index& index)
     : index_(index),
-      last_num_records_(0),
+      last_num_records_(0u),
       last_duration_(0u) {}
 
 vector<Index::Item> QueryProcessor::Answer(const string& query,
