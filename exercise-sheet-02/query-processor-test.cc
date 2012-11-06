@@ -84,16 +84,16 @@ TEST_F(QueryProcessorTest, dirtyQuery) {
   {
     vector<Index::Item> results = proc.Answer("Tesla 33 Edison", num_results_);
     ASSERT_EQ(4, results.size());
-    EXPECT_EQ(vector<Index::Item>({ {4, 0, 5}, {4, 24, 6},
-                                    {5, 47, 5}, {5, 77, 6} }),
+    EXPECT_EQ(vector<Index::Item>({ {4, {0}, 5, 0.0f}, {4, {24}, 6, 0.0f},
+                                    {5, {47}, 5, 0.0f}, {5, {77}, 6, 0.0f} }),
             results);
   }
   {
     vector<Index::Item> results = proc.Answer("hmm? Tesla  \ta Edison",
         num_results_);
     ASSERT_EQ(4, results.size());
-    EXPECT_EQ(vector<Index::Item>({ {4, 0, 5}, {4, 24, 6},
-                                    {5, 47, 5}, {5, 77, 6} }),
+    EXPECT_EQ(vector<Index::Item>({ {4, {0}, 5, 0.0f}, {4, {24}, 6, 0.0f},
+                                    {5, {47}, 5, 0.0f}, {5, {77}, 6, 0.0f} }),
             results);
   }
 }
@@ -101,10 +101,10 @@ TEST_F(QueryProcessorTest, dirtyQuery) {
 TEST_F(QueryProcessorTest, teslaAnswer) {
   QueryProcessor proc(index_);
   vector<Index::Item> results = proc.Answer("tesla", num_results_);
-  ASSERT_EQ(7, results.size());
-  EXPECT_EQ(vector<Index::Item>({ {0, 98, 5}, {1, 22, 5}, {2, 34, 5},
-                                  {2, 150, 5}, {3, 13, 5}, {4, 0, 5},
-                                  {5, 47, 5} }),
+  ASSERT_EQ(6, results.size());
+  EXPECT_EQ(vector<Index::Item>({ {0, {98}, 5, 0.0f}, {1, {22}, 5, 0.0f},
+                                  {2, {34, 150}, 5, 0.0f}, {3, {13}, 5, 0.0f},
+                                  {4, {0}, 5, 0.0f}, {5, {47}, 5, 0.0f} }),
             results);
   vector<Index::Item> results2 = proc.Answer("Tesla", num_results_);
   EXPECT_EQ(results, results2);
@@ -114,7 +114,7 @@ TEST_F(QueryProcessorTest, atomsAnswer) {
   QueryProcessor proc(index_);
   vector<Index::Item> results = proc.Answer("atoms", num_results_);
   ASSERT_EQ(1, results.size());
-  EXPECT_EQ(vector<Index::Item>({ {0, 65, 5} }),
+  EXPECT_EQ(vector<Index::Item>({ {0, {65}, 5, 0.0f} }),
             results);
 }
 
@@ -122,7 +122,7 @@ TEST_F(QueryProcessorTest, tesla_atomsAnswer) {
   QueryProcessor proc(index_);
   vector<Index::Item> results = proc.Answer("tesla atoms", num_results_);
   // ASSERT_EQ(2u, results.size());
-  EXPECT_EQ(vector<Index::Item>({ {0, 98, 5}, {0, 65, 5} }),
+  EXPECT_EQ(vector<Index::Item>({ {0, {98}, 5, 0.0f}, {0, {65}, 5, 0.0f} }),
             results);
 }
 
@@ -130,7 +130,7 @@ TEST_F(QueryProcessorTest, EdisonAnswer) {
   QueryProcessor proc(index_);
   vector<Index::Item> results = proc.Answer("Edison", num_results_);
   ASSERT_EQ(2, results.size());
-  EXPECT_EQ(vector<Index::Item>({ {4, 24, 6}, {5, 77, 6} }),
+  EXPECT_EQ(vector<Index::Item>({ {4, {24}, 6, 0.0f}, {5, {77}, 6, 0.0f} }),
             results);
 }
 
@@ -138,16 +138,16 @@ TEST_F(QueryProcessorTest, Tesla_EdisonAnswer) {
   QueryProcessor proc(index_);
   vector<Index::Item> results = proc.Answer("Tesla Edison", num_results_);
   ASSERT_EQ(4, results.size());
-  EXPECT_EQ(vector<Index::Item>({ {4, 0, 5}, {4, 24, 6},
-                                  {5, 47, 5}, {5, 77, 6} }),
+  EXPECT_EQ(vector<Index::Item>({ {4, {0}, 5, 0.0f}, {4, {24}, 6, 0.0f},
+                                  {5, {47}, 5, 0.0f}, {5, {77}, 6, 0.0f} }),
             results);
 }
 
 TEST_F(QueryProcessorTest, GoogleAnswer) {
   QueryProcessor proc(index_);
   vector<Index::Item> results = proc.Answer("Google", num_results_);
-  ASSERT_EQ(2, results.size());
-  EXPECT_EQ(vector<Index::Item>({ {2, 18, 6}, {2, 102, 6} }),
+  ASSERT_EQ(1, results.size());
+  EXPECT_EQ(vector<Index::Item>({ {2, {18, 102}, 6, 0.0f} }),
             results);
 }
 
@@ -155,10 +155,11 @@ TEST_F(QueryProcessorTest, longQuery) {
   QueryProcessor proc(index_);
   string query = "Google birthday doodle Tesla Legacy";
   vector<Index::Item> results = proc.Answer(query, num_results_);
-  ASSERT_EQ(7, results.size());
-  EXPECT_EQ(vector<Index::Item>({ {2, 18, 6}, {2, 102, 6},
-                                  {2, 47, 8}, {2, 88, 6},
-                                  {2, 34, 5}, {2, 150, 5},
-                                  {2, 0, 6} }),
+  ASSERT_EQ(5, results.size());
+  EXPECT_EQ(vector<Index::Item>({ {2, {18, 102}, 6, 0.0f},
+                                  {2, {47}, 8, 0.0f},
+                                  {2, {88}, 6, 0.0f},
+                                  {2, {34, 150}, 5, 0.0f},
+                                  {2, {0}, 6, 0.0f} }),
             results);
 }

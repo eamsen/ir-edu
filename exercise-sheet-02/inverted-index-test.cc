@@ -98,17 +98,17 @@ TEST_F(IndexTest, weirdItems) {
   {
     const vector<Index::Item>& items = index_.Items("mac");
     EXPECT_EQ(1, items.size());
-    EXPECT_EQ(vector<Index::Item>({ {6, 25, 3} }),
+    EXPECT_EQ(vector<Index::Item>({ {6, {25}, 3, 0.0f} }),
               items);
   }
 }
 
 TEST_F(IndexTest, teslaItems) {
   const vector<Index::Item>& items = index_.Items("tesla");
-  ASSERT_EQ(7, items.size());
-  EXPECT_EQ(vector<Index::Item>({ {0, 98, 5}, {1, 22, 5}, {2, 34, 5},
-                                  {2, 150, 5}, {3, 13, 5}, {4, 0, 5},
-                                  {5, 47, 5} }),
+  ASSERT_EQ(6, items.size());
+  EXPECT_EQ(vector<Index::Item>({ {0, {98}, 5, 0.0f}, {1, {22}, 5, 0.0f},
+                                  {2, {34, 150}, 5, 0.0f}, {3, {13}, 5, 0.0f},
+                                  {4, {0}, 5, 0.0f}, {5, {47}, 5, 0.0f} }),
             items);
   const vector<Index::Item>& items2 = index_.Items("Tesla");
   EXPECT_EQ(items, items2);
@@ -117,20 +117,20 @@ TEST_F(IndexTest, teslaItems) {
 TEST_F(IndexTest, atomsItems) {
   const vector<Index::Item>& items = index_.Items("atoms");
   ASSERT_EQ(1, items.size());
-  EXPECT_EQ(vector<Index::Item>({ {0, 65, 5} }),
+  EXPECT_EQ(vector<Index::Item>({ {0, {65}, 5, 0.0f} }),
             items);
 }
 
 TEST_F(IndexTest, EdisonItems) {
   const vector<Index::Item>& items = index_.Items("Edison");
   ASSERT_EQ(2, items.size());
-  EXPECT_EQ(vector<Index::Item>({ {4, 24, 6}, {5, 77, 6} }),
+  EXPECT_EQ(vector<Index::Item>({ {4, {24}, 6, 0.0f}, {5, {77}, 6, 0.0f} }),
             items);
 }
 
 TEST_F(IndexTest, GoogleItems) {
   const vector<Index::Item>& items = index_.Items("Google");
-  ASSERT_EQ(2, items.size());
-  EXPECT_EQ(vector<Index::Item>({ {2, 18, 6}, {2, 102, 6} }),
+  ASSERT_EQ(1, items.size());
+  EXPECT_EQ(vector<Index::Item>({ {2, {18, 102}, 6, 0.0f} }),
             items);
 }

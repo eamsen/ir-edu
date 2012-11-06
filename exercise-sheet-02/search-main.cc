@@ -52,7 +52,9 @@ string ReadFile(const string& path) {
 void WriteRecord(const Index::Record& record,
                  const vector<pair<size_t, size_t> >& matches,
                  ostream* stream) {
-  *stream << "\n" << record.url << "\n";
+  *stream << "\n" << record.url;
+  // Do not output content for now.
+  // return;
   std::priority_queue<pair<int, int>, vector<pair<int, int> >,
                       std::greater<pair<int, int> > > queue;
   for (auto it = matches.cbegin(), end = matches.cend();
@@ -145,6 +147,7 @@ int main(int argc, char** argv) {
     size_t num_records = 0;
     vector<pair<size_t, size_t> > matches;
     int prev_record_id = Index::kInvalidId;
+    int prev_score = 0;
     const size_t num_show_records = std::min(records_found, max_num_records);
     // Iterate over results to output all matching records.
     // Result items are sorted by record ids, with one item for each keyword
@@ -158,6 +161,7 @@ int main(int argc, char** argv) {
         // record id.
         const Index::Record& record = index.RecordById(prev_record_id);
         WriteRecord(record, matches, &cout);
+        cout << ": " << prev_score << "\n";
         ++num_records;
         matches.clear();
       }
@@ -165,8 +169,12 @@ int main(int argc, char** argv) {
         // Remember the keyword occurrence until all occurrences are
         // collected for the current record id.
         const Index::Item& item = results.back();
-        matches.push_back(make_pair(item.pos, item.size));
+        for (auto it = item.positions.cbegin(), end = item.positions.cend();
+             it != end; ++it) {
+          matches.push_back(make_pair(*it, item.size));
+        }
         prev_record_id = item.record_id;
+        prev_score = item.score;
         results.pop_back();
       }
     }

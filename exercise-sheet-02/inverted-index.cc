@@ -132,7 +132,7 @@ auto Index::Items(const string& keyword) const -> const vector<Item>& {
   static vector<Item> kEmptyList;
   string low = keyword;
   std::transform(keyword.cbegin(), keyword.cend(), low.begin(), ::tolower);
-  auto it = index_.find(low);
+  auto const it = index_.find(low);
   if (it == index_.end()) {
     return kEmptyList;
   }
@@ -158,7 +158,22 @@ int Index::AddItem(const string& keyword, const int record_id,
   // TODO(esawin): Check for duplicates and sort if required.
   string low = keyword;
   std::transform(keyword.cbegin(), keyword.cend(), low.begin(), ::tolower);
-  index_[low].push_back({record_id, pos, low.size()});
+  auto it = index_.find(low);
+  if (it == index_.end()) {
+    it = index_.insert(std::make_pair(low, {Item(record_id, {pos},
+                                                 low.size(), 0.0f)})).first;
+  } else {
+    vector<Item>& items = it->second;
+    Item& last = items.back();
+    if (last.record_id == record_id) {
+      // Add another keyword position within known record.
+      last.positions.push_back(pos);
+      last.score += 0.0f;
+    } else {
+      // Keyword occurs in a new record.
+      items.push_back(Item(record_id, {pos}, low.size(), 0.0f));
+    }
+  }
   return ++num_items_;
 }
 

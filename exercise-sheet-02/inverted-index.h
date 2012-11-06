@@ -23,13 +23,21 @@ class Index {
 
   // An item depicts an occurence of a keyword within a record at some position.
   struct Item {
+    Item(const int record_id, const std::vector<size_t>& pos, const size_t size,
+         const float score)
+        : positions(pos),
+          record_id(record_id),
+          size(size),
+          score(score) {}
+
     bool operator==(const Item& rhs) const {
-      return record_id == rhs.record_id && pos == rhs.pos && size == rhs.size;
+      return record_id == rhs.record_id && positions == rhs.positions;
     }
 
+    std::vector<size_t> positions;
     int record_id;
-    size_t pos;
     size_t size;
+    float score;
   };
 
   // The minimum size for a valid keyword.
