@@ -107,7 +107,7 @@ int main(int argc, char** argv) {
   // Index::AddRecordsFromCsvFile(filename, &index);
   // Alternative index construction by ready whole CSV file at once.
   Index::AddRecordsFromCsv(ReadFile(filename), &index);
-  index.PrecomputeScores();
+  index.ComputeScores(1.75f, 0.75f);
   auto end = Clock();
   Profiler::Stop();
   auto diff = end - start;
@@ -148,7 +148,7 @@ int main(int argc, char** argv) {
     size_t num_records = 0;
     vector<pair<size_t, size_t> > matches;
     int prev_record_id = Index::kInvalidId;
-    int prev_score = 0;
+    float prev_score = 0;
     const size_t num_show_records = std::min(records_found, max_num_records);
     // Iterate over results to output all matching records.
     // Result items are sorted by record ids, with one item for each keyword

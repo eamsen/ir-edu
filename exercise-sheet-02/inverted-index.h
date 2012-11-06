@@ -66,7 +66,8 @@ class Index {
   // Default index initialization.
   Index();
 
-  void PrecomputeScores();
+  // Computes BM25 scores, replacing the term frequency based defaults.
+  void ComputeScores(const float k, const float b);
 
   // Returns a const reference to the record of given id.
   const Record& RecordById(const int record_id) const;
@@ -91,9 +92,8 @@ class Index {
   // Reserves space for given number of records.
   void ReserveRecords(const size_t num);
 
-  // Returns the inversed document frequence (N/df, where N is the total number
-  // of records and df is the number of records containing the keyword).
-  float InvDocumentFreq(const std::string& keyword) const;
+  // Returns the total size (in char) of all indexed records.
+  size_t TotalSize() const;
 
   // Returns the number of records indexed.
   size_t NumRecords() const;
@@ -109,9 +109,10 @@ class Index {
   Record& recordById(const int record_id);
 
   std::unordered_map<std::string, std::vector<Item> > index_;
-  std::unordered_map<std::string, float> inv_document_freq_;
+  std::unordered_map<std::string, size_t> record_freq_;
   std::vector<Record> records_;
   size_t num_items_;
+  size_t total_size_;
 };
 
 #endif  // EXERCISE_SHEET_02_INVERTED_INDEX_H_
