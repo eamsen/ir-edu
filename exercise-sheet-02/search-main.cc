@@ -103,8 +103,6 @@ int main(int argc, char** argv) {
   Index index;
   Profiler::Start("index-construction.prof");
   auto start = Clock();
-  // Construct index from CSV file line by line.
-  // Index::AddRecordsFromCsvFile(filename, &index);
   // Alternative index construction by ready whole CSV file at once.
   Index::AddRecordsFromCsv(ReadFile(filename), &index);
   index.ComputeScores(1.75f, 0.75f);

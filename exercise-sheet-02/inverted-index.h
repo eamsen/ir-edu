@@ -58,11 +58,6 @@ class Index {
   static void AddRecordsFromCsv(const std::string& file_content,
                                 Index* inverted_index);
 
-  // Adds all records and items from given CSV file, if the file format is:
-  // <url>\t<content>\n
-  static void AddRecordsFromCsvFile(const std::string& filename,
-                                    Index* inverted_index);
-
   // Default index initialization.
   Index();
 

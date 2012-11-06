@@ -94,32 +94,8 @@ void Index::AddRecordsFromCsv(const string& file_content,
     }
     pos = content_end + 1;
   }
-}
-
-void Index::AddRecordsFromCsvFile(const string& filename,
-                                  Index* inverted_index) {
-  using std::ifstream;
-  using std::getline;
-
-  ifstream file(filename.c_str());
-  string line;
-  getline(file, line);
-  while (!file.eof()) {
-    // Skip to second column after first tab.
-    const size_t pos = line.find('\t');
-    assert(pos != string::npos && "CSV file has wrong format");
-    const string url = line.substr(pos);
-    const string content = line.substr(pos + 1, line.size() - pos);
-    const int record_id = inverted_index->AddRecord(url, content);
-    vector<PosSize> keywords = ExtractKeywords(content, 0, content.size());
-    // Add each keyword from the content to the index.
-    for (auto key = keywords.cbegin(), end = keywords.cend();
-         key != end; ++key) {
-      const string keyword = content.substr(key->pos, key->size);
-      inverted_index->AddItem(keyword, record_id, key->pos);
-    }
-    getline(file, line);
-  }
+  // TODO(esawin): Should we call CalculateScores? This would degrade this
+  // function to a constructor.
 }
 
 Index::Index()
