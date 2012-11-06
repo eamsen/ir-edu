@@ -2,6 +2,9 @@ DIRS1=lectures exercises master-solutions es131 js174 mb226
 DIRS2=ab331-se33 ah367 as462 cg160 cs449 dp65 fs204 fw41 jm152 jp150 js301\
 			jw218 ke23 ls155 mb381 mf205 mf228 mg225 mo54
 
+default:
+	@echo "targets: up, pepare EX=0?, ci"
+
 up:
 	@for i in $(DIRS1);\
 		do echo "updating $$i";\

@@ -129,6 +129,11 @@ const Index::Record& Index::RecordById(const int record_id) const {
   return records_[record_id];
 }
 
+Index::Record& Index::recordById(const int record_id) {
+  assert(record_id >= 0 && record_id < static_cast<int>(records_.size()));
+  return records_[record_id];
+}
+
 auto Index::Items(const string& keyword) const -> const vector<Item>& {
   static vector<Item> kEmptyList;
   string low = keyword;
@@ -147,8 +152,7 @@ int Index::AddRecord(const string& url, const string& content) {
 }
 
 size_t Index::ExtendRecord(const int record_id, const string& content) {
-  assert(record_id >= 0 && record_id < static_cast<int>(records_.size()));
-  Record& record = records_[record_id];
+  Record& record = recordById(record_id);
   const size_t size = record.content.size();
   record.content += content;
   return size;
@@ -162,7 +166,7 @@ int Index::AddItem(const string& keyword, const int record_id,
   if (it == index_.end()) {
     // New keyword, create a new item.
     index_.insert(std::make_pair(low, vector<Item>({Item(record_id, {pos},
-                                                    low.size(), 0.0f)})));
+                                                    low.size(), 1.0f)})));
   } else {
     // Keyword already in the index.
     vector<Item>& items = it->second;

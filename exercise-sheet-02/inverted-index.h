@@ -99,6 +99,9 @@ class Index {
   void OutputInvertedListLengths() const;
 
  private:
+  // Returns a reference to the record of given id.
+  Record& recordById(const int record_id);
+
   std::unordered_map<std::string, std::vector<Item> > index_;
   std::vector<Record> records_;
   size_t num_items_;

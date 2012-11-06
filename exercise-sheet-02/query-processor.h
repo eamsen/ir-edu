@@ -20,6 +20,9 @@ class QueryProcessor {
   std::vector<Index::Item> Answer(const std::string& query,
                                   const int max_num_records) const;
 
+  std::vector<Index::Item> Rank(const std::vector<Index::Item>& items,
+                                const int k) const;
+
   // Returns the number of records found in the last call to Answer.
   size_t LastRecordsFound() const;
 
@@ -29,8 +32,7 @@ class QueryProcessor {
  private:
   // Intersects inverted lists and returns the result list.
   std::vector<Index::Item> Intersect(
-      const std::vector<const std::vector<Index::Item>*>& lists,
-      const int max_num) const;
+      const std::vector<const std::vector<Index::Item>*>& lists) const;
 
   const Index& index_;
   mutable size_t last_num_records_;

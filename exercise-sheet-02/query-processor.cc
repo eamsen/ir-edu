@@ -1,6 +1,8 @@
 // Copyright 2012 Eugen Sawin <esawin@me73.com>
 #include "./query-processor.h"
+#include <cassert>
 #include <queue>
+#include <algorithm>
 
 using std::string;
 using std::vector;
@@ -43,14 +45,46 @@ vector<Index::Item> QueryProcessor::Answer(const string& query,
       lists.push_back(&items);
     }
   }
-  vector<Index::Item> results = Intersect(lists, max_num_records);
+  // Boolean intersection.
+  vector<Index::Item> results = Intersect(lists);
+  results = Rank(results, max_num_records);
   last_duration_ = Clock() - beg;
   return results;
 }
 
+vector<Index::Item> QueryProcessor::Rank(const vector<Index::Item>& items,
+                                         const int k) const {
+  typedef std::pair<float, size_t> ScoreIndexPair;
+  
+  const size_t num_items = items.size();
+  vector<ScoreIndexPair> pairs;
+  pairs.reserve(num_items / 2);
+  int prev_record_id = Index::kInvalidId;
+  for (size_t i = 0; i < num_items; ++i) {
+    const Index::Item& item = items[i];
+    if (item.record_id != prev_record_id) {
+      // New record.
+      pairs.push_back({0.0f, i});
+    }
+    pairs.back().first += item.score;
+    prev_record_id = item.record_id;
+  }
+  // Sort for the top k records.
+  std::sort(pairs.begin(), pairs.end());
+  // Construct the result.
+  vector<Index::Item> result;
+  for (auto it = pairs.cbegin(), end = pairs.cend(); it != end; ++it) {
+    size_t i = it->second;
+    const int record_id = items[i].record_id;
+    while (items[i].record_id == record_id) {
+      result.push_back(items[i++]);
+    }
+  }
+  return result; 
+}
+
 vector<Index::Item> QueryProcessor::Intersect(
-    const vector<const vector<Index::Item>*>& lists,
-    const int max_num) const {
+    const vector<const vector<Index::Item>*>& lists) const {
   using std::make_pair;
   typedef std::priority_queue<std::pair<int, int>, vector<std::pair<int, int> >,
                               std::greater<std::pair<int, int> > > Queue;
@@ -59,13 +93,15 @@ vector<Index::Item> QueryProcessor::Intersect(
   const size_t num_lists = lists.size();
   vector<int> indices(num_lists, 0);
   Queue queue;
+  size_t max_list_size = 0;
   for (size_t l = 0; l < num_lists; ++l) {
-    queue.push(make_pair((*lists[l])[indices[l]].record_id, l));
+    const vector<Index::Item>& list = (*lists[l]);
+    queue.push(make_pair(list[indices[l]].record_id, l));
+    std::max(max_list_size, list.size());
   }
 
-  const size_t max_total = num_lists * max_num;
   vector<Index::Item> results;
-  results.reserve(max_total);
+  results.reserve(num_lists * max_list_size);
   while (queue.size()) {
     const int record_id = queue.top().first;
     const int list = queue.top().second;
