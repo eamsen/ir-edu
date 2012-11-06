@@ -26,10 +26,10 @@ class QueryProcessorTest : public ::testing::Test {
     sentences_ += urls_.back() + "\tTo keep the atomic hydrogen from forming " +
                   "hydrogen molecules, the atoms were spin-polarized by a 7 " +
                   "tesla magnet.\n";
-    urls_.push_back("Nikola_Tesla");
+    urls_.push_back("Nikola_Tesla1");
     sentences_ += urls_.back() + "\tLegacy and honors The tesla (symbol T) – " +
                   "compound derived SI unit of magnetic flux density.\n";
-    urls_.push_back("Nikola_Tesla");
+    urls_.push_back("Nikola_Tesla2");
     sentences_ += urls_.back() + "\tLegacy and honors Google honoured Tesla " +
                   "on his birthday on 10 July 2009 by displaying a doodle in " +
                   "the Google search home page, that showed the G as a tesla " +
@@ -38,11 +38,11 @@ class QueryProcessorTest : public ::testing::Test {
     sentences_ += urls_.back() + "\tAfter Nikola Tesla left Westinghouse, " +
                   "Lamme redesigned the induction motor, making it as we " +
                   "know it today.\n";
-    urls_.push_back("Thomas_Edison");
+    urls_.push_back("Thomas_Edison1");
     sentences_ += urls_.back() + "\tTesla once said that if Edison had to " +
                   "find a needle in a haystack he would take apart the " +
                   "haystack one straw at a time.\n";
-    urls_.push_back("Thomas_Edison");
+    urls_.push_back("Thomas_Edison2");
     sentences_ += urls_.back() + "\tThe details of what happened are not " +
                   "known but Tesla who had once worked for Edison quit when " +
                   "he was promised a large bonus for solving a problem and " +

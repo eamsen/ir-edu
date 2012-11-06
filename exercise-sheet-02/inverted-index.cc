@@ -57,6 +57,8 @@ auto Index::ExtractKeywords(const string& content, const size_t beg,
 void Index::AddRecordsFromCsv(const string& file_content,
                               Index* inverted_index) {
   const size_t content_size = file_content.size();
+  string prev_url;
+  int record_id = kInvalidId;
   size_t pos = 0;
   while (pos < content_size) {
     // Skip to second column after first tab.
@@ -68,7 +70,15 @@ void Index::AddRecordsFromCsv(const string& file_content,
     const string url = file_content.substr(pos, content_beg - pos);
     const string content = file_content.substr(content_beg + 1,
                                                content_end - content_beg);
-    const int record_id = inverted_index->AddRecord(url, content);
+    size_t offset = 0u;
+    if (url != prev_url) {
+      // New record found in file contents.
+      record_id = inverted_index->AddRecord(url, content);
+      prev_url = url;
+    } else {
+      const Record& record = inverted_index->RecordById(record_id);
+      offset = record.content.size();
+    }
     // Extract the keyword positions.
     vector<PosSize> keywords = ExtractKeywords(content, 0, content.size());
     // Add each keyword from the content to the index.
@@ -76,7 +86,7 @@ void Index::AddRecordsFromCsv(const string& file_content,
          it != end; ++it) {
       // Extract the keyword string and add it to the index.
       string keyword = content.substr(it->pos, it->size);
-      inverted_index->AddItem(keyword, record_id, it->pos);
+      inverted_index->AddItem(keyword, record_id, it->pos + offset);
     }
     pos = content_end + 1;
   }
@@ -99,10 +109,10 @@ void Index::AddRecordsFromCsvFile(const string& filename,
     const int record_id = inverted_index->AddRecord(url, content);
     vector<PosSize> keywords = ExtractKeywords(content, 0, content.size());
     // Add each keyword from the content to the index.
-    for (auto keyIt = keywords.cbegin(), endIt = keywords.cend();
-         keyIt != endIt; ++keyIt) {
-      const string keyword = content.substr(keyIt->pos, keyIt->size);
-      inverted_index->AddItem(keyword, record_id, keyIt->pos);
+    for (auto key = keywords.cbegin(), end = keywords.cend();
+         key != end; ++key) {
+      const string keyword = content.substr(key->pos, key->size);
+      inverted_index->AddItem(keyword, record_id, key->pos);
     }
     getline(file, line);
   }
