@@ -107,6 +107,7 @@ int main(int argc, char** argv) {
   // Index::AddRecordsFromCsvFile(filename, &index);
   // Alternative index construction by ready whole CSV file at once.
   Index::AddRecordsFromCsv(ReadFile(filename), &index);
+  index.PrecomputeScores();
   auto end = Clock();
   Profiler::Stop();
   auto diff = end - start;

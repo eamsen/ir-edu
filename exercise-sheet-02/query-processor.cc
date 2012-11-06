@@ -70,14 +70,17 @@ vector<Index::Item> QueryProcessor::Rank(const vector<Index::Item>& items,
     prev_record_id = item.record_id;
   }
   // Sort for the top k records.
-  std::sort(pairs.begin(), pairs.end());
-  // Construct the result.
+  std::sort(pairs.begin(), pairs.end(), std::greater<ScoreIndexPair>());
+  // Construct the result in reversed order.
+  size_t pair_index = std::min(static_cast<size_t>(k), pairs.size());
   vector<Index::Item> result;
-  for (auto it = pairs.cbegin(), end = pairs.cend(); it != end; ++it) {
-    size_t i = it->second;
-    const int record_id = items[i].record_id;
-    while (items[i].record_id == record_id) {
-      result.push_back(items[i++]);
+  while (pair_index--) {
+    const float score = pairs[pair_index].first;
+    size_t item_index = pairs[pair_index].second;
+    const int record_id = items[item_index].record_id;
+    while (items[item_index].record_id == record_id) {
+      result.push_back(items[item_index++]);
+      result.back().score = score;
     }
   }
   return result; 

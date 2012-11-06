@@ -124,6 +124,21 @@ void Index::AddRecordsFromCsvFile(const string& filename,
 Index::Index()
     : num_items_(0u) {}
 
+void Index::PrecomputeScores() {
+  const size_t num_records = NumRecords();
+  for (auto it = index_.begin(), end = index_.end(); it != end; ++it) {
+    const string& keyword = it->first;
+    auto freq = inv_document_freq_.find(keyword);
+    assert(freq != inv_document_freq_.end());
+    freq->second = num_records / freq->second;
+    vector<Item>& items = it->second;
+    for (auto it2 = items.begin(), end2 = items.end(); it2 != end2; ++it2) {
+      Item& item = *it2;
+      item.score *= freq->second;
+    }
+  }
+}
+
 const Index::Record& Index::RecordById(const int record_id) const {
   assert(record_id >= 0 && record_id < static_cast<int>(records_.size()));
   return records_[record_id];
@@ -167,6 +182,7 @@ int Index::AddItem(const string& keyword, const int record_id,
     // New keyword, create a new item.
     index_.insert(std::make_pair(low, vector<Item>({Item(record_id, {pos},
                                                     low.size(), 1.0f)})));
+    inv_document_freq_.insert(std::make_pair(low, 0.0f));
   } else {
     // Keyword already in the index.
     vector<Item>& items = it->second;
@@ -179,6 +195,7 @@ int Index::AddItem(const string& keyword, const int record_id,
     } else {
       // Keyword occurs in a new record.
       items.push_back(Item(record_id, {pos}, low.size(), 1.0f));
+      ++inv_document_freq_[low];
     }
   }
   return ++num_items_;
@@ -186,6 +203,12 @@ int Index::AddItem(const string& keyword, const int record_id,
 
 void Index::ReserveRecords(const size_t num) {
   records_.reserve(num);
+}
+
+float Index::InvDocumentFreq(const string& keyword) const {
+  auto const it = inv_document_freq_.find(keyword);
+  assert(it != inv_document_freq_.end());
+  return NumRecords() / it->second;
 }
 
 size_t Index::NumRecords() const {
