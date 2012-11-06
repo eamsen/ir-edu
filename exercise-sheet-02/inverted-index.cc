@@ -71,13 +71,15 @@ void Index::AddRecordsFromCsv(const string& file_content,
     const string content = file_content.substr(content_beg + 1,
                                                content_end - content_beg);
     size_t offset = 0u;
+    // Assuming the records are continuous within the list.
+    // TODO(esawin): assert that!
     if (url != prev_url) {
       // New record found in file contents.
       record_id = inverted_index->AddRecord(url, content);
       prev_url = url;
     } else {
-      const Record& record = inverted_index->RecordById(record_id);
-      offset = record.content.size();
+      // Known record, add the content.
+      offset = inverted_index->ExtendRecord(record_id, content);
     }
     // Extract the keyword positions.
     vector<PosSize> keywords = ExtractKeywords(content, 0, content.size());
@@ -141,6 +143,14 @@ int Index::AddRecord(const string& url, const string& content) {
   // TODO(esawin): Check for duplicates.
   records_.push_back({url, content});
   return records_.size() - 1;
+}
+
+size_t Index::ExtendRecord(const int record_id, const string& content) {
+  assert(record_id >= 0 && record_id < static_cast<int>(records_.size()));
+  Record& record = records_[record_id];
+  const size_t size = record.content.size();
+  record.content += content;
+  return size;
 }
 
 int Index::AddItem(const string& keyword, const int record_id,

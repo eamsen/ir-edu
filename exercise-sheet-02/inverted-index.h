@@ -68,6 +68,10 @@ class Index {
   // Returns the new record id.
   int AddRecord(const std::string& url, const std::string& content);
 
+  // Extends the content of a record with given id.
+  // Returns the old size of the record content.
+  size_t ExtendRecord(const int record_id, const std::string& content);
+
   // Adds the item with given keyword, record id and its position within the
   // record to the index.
   // Returns the new total number of items in the index.
