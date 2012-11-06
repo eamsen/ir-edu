@@ -5,7 +5,7 @@ TESTLIBS:=-lgtest -lgtest_main -lpthread $(LIBS)
 MAIN_BINARIES:=$(basename $(wildcard *main.cc))
 TEST_BINARIES:=$(basename $(wildcard *test.cc))
 HEADER:=$(wildcard *.h)
-OBJECTS:=inverted-index.o query-processor.o
+OBJECTS:=index.o query-processor.o
 
 .PRECIOUS: %.o
 

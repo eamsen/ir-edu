@@ -5,7 +5,7 @@
 #include <vector>
 #include <set>
 #include "./query-processor.h"
-#include "./inverted-index.h"
+#include "./index.h"
 
 using std::vector;
 using std::set;

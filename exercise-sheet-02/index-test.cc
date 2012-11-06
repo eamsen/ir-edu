@@ -4,7 +4,7 @@
 #include <fstream>
 #include <vector>
 #include <set>
-#include "./inverted-index.h"
+#include "./index.h"
 
 using std::vector;
 using std::set;

@@ -6,7 +6,7 @@
 #include <fstream>
 #include <sstream>
 #include <queue>
-#include "./inverted-index.h"
+#include "./index.h"
 #include "./query-processor.h"
 #include "./profiler.h"
 #include "./clock.h"

@@ -1,5 +1,5 @@
 // Copyright 2012 Eugen Sawin <esawin@me73.com>
-#include "./inverted-index.h"
+#include "./index.h"
 #include <unordered_map>
 #include <cassert>
 #include <string>
