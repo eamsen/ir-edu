@@ -54,7 +54,7 @@ void WriteRecord(const Index::Record& record,
                  ostream* stream) {
   *stream << "\n" << record.url;
   // Do not output content for now.
-  // return;
+  return;
   std::priority_queue<pair<int, int>, vector<pair<int, int> >,
                       std::greater<pair<int, int> > > queue;
   for (auto it = matches.cbegin(), end = matches.cend();

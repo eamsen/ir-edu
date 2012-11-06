@@ -82,12 +82,13 @@ void Index::AddRecordsFromCsv(const string& file_content,
       offset = inverted_index->ExtendRecord(record_id, content);
     }
     // Extract the keyword positions.
-    vector<PosSize> keywords = ExtractKeywords(content, 0, content.size());
+    const vector<PosSize> keywords = ExtractKeywords(content, 0,
+                                                     content.size());
     // Add each keyword from the content to the index.
     for (auto it = keywords.cbegin(), end = keywords.cend();
          it != end; ++it) {
       // Extract the keyword string and add it to the index.
-      string keyword = content.substr(it->pos, it->size);
+      const string keyword = content.substr(it->pos, it->size);
       inverted_index->AddItem(keyword, record_id, it->pos + offset);
     }
     pos = content_end + 1;
@@ -155,23 +156,25 @@ size_t Index::ExtendRecord(const int record_id, const string& content) {
 
 int Index::AddItem(const string& keyword, const int record_id,
                    const size_t pos) {
-  // TODO(esawin): Check for duplicates and sort if required.
   string low = keyword;
   std::transform(keyword.cbegin(), keyword.cend(), low.begin(), ::tolower);
   auto it = index_.find(low);
   if (it == index_.end()) {
-    it = index_.insert(std::make_pair(low, {Item(record_id, {pos},
-                                                 low.size(), 0.0f)})).first;
+    // New keyword, create a new item.
+    index_.insert(std::make_pair(low, vector<Item>({Item(record_id, {pos},
+                                                    low.size(), 0.0f)})));
   } else {
+    // Keyword already in the index.
     vector<Item>& items = it->second;
     Item& last = items.back();
     if (last.record_id == record_id) {
-      // Add another keyword position within known record.
+      // Add another keyword position within known record and increase
+      // term frequency.
       last.positions.push_back(pos);
-      last.score += 0.0f;
+      last.score += 1.0f;
     } else {
       // Keyword occurs in a new record.
-      items.push_back(Item(record_id, {pos}, low.size(), 0.0f));
+      items.push_back(Item(record_id, {pos}, low.size(), 1.0f));
     }
   }
   return ++num_items_;
