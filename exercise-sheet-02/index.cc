@@ -104,19 +104,21 @@ Index::Index()
 
 void Index::ComputeScores(const float b, const float k) {
   const float num_records = NumRecords();
-  const size_t avg_record_size = TotalSize() / num_records;
+  const float inv_avg_record_size = static_cast<float>(num_records) /
+                                    TotalSize();
   for (auto it = index_.begin(), end = index_.end(); it != end; ++it) {
     const string& keyword = it->first;
     auto freq_it = record_freq_.find(keyword);
     assert(freq_it != record_freq_.end());
+    assert(freq_it->second != 0u);
     const float inv_record_freq = std::log2(num_records / freq_it->second);
     vector<Item>& items = it->second;
     for (auto it2 = items.begin(), end2 = items.end(); it2 != end2; ++it2) {
       Item& item = *it2;
-      const size_t doc_size = RecordById(item.record_id).content.size();
+      const size_t record_size  = RecordById(item.record_id).content.size();
       item.score = item.score * (k + 1) /
-                   (k * (1 - b + b * doc_size / avg_record_size) + item.score) *
-                   inv_record_freq;
+                   (k * (1 - b + b * record_size * inv_avg_record_size) +
+                    item.score) * inv_record_freq;
     }
   }
 }
@@ -166,7 +168,7 @@ int Index::AddItem(const string& keyword, const int record_id,
     // New keyword, create a new item.
     index_.insert(std::make_pair(low, vector<Item>({Item(record_id, {pos},
                                                     low.size(), 1.0f)})));
-    record_freq_.insert(std::make_pair(low, 0u));
+    record_freq_.insert(std::make_pair(low, 1u));
   } else {
     // Keyword already in the index.
     vector<Item>& items = it->second;
