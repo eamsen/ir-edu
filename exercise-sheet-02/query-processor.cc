@@ -49,18 +49,19 @@ vector<Index::Item> QueryProcessor::Answer(const string& query,
   }
   // Boolean intersection.
   vector<Index::Item> results = Intersect(lists);
-  results = Rank(results, max_num_records);
+  results = Rank(results, max_num_records, lists.size());
   last_duration_ = Clock() - beg;
   return results;
 }
 
 vector<Index::Item> QueryProcessor::Rank(const vector<Index::Item>& items,
-                                         const size_t max_num_records) const {
+                                         const size_t max_num_records,
+                                         const size_t num_keywords) const {
   typedef std::pair<float, size_t> ScoreIndexPair;
 
   const size_t num_items = items.size();
   vector<ScoreIndexPair> pairs;
-  pairs.reserve(num_items / 2);
+  pairs.reserve(num_items / std::max(1u, num_keywords));
   int prev_record_id = Index::kInvalidId;
   for (size_t i = 0; i < num_items; ++i) {
     const Index::Item& item = items[i];
@@ -72,10 +73,12 @@ vector<Index::Item> QueryProcessor::Rank(const vector<Index::Item>& items,
     prev_record_id = item.record_id;
   }
   // Sort for the top records.
-  std::sort(pairs.begin(), pairs.end(), std::greater<ScoreIndexPair>());
-  // Construct the result in reversed order.
   size_t pair_index = std::min(max_num_records, pairs.size());
+  std::partial_sort(pairs.begin(), pairs.begin() + pair_index, pairs.end(),
+                    std::greater<ScoreIndexPair>());
+  // Construct the result in reversed order.
   vector<Index::Item> result;
+  result.reserve(pair_index * num_keywords);
   while (pair_index--) {
     const float score = pairs[pair_index].first;
     size_t item_index = pairs[pair_index].second;

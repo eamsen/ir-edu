@@ -21,8 +21,10 @@ class QueryProcessor {
 
   // Returns the best matching items ranked by the score.
   // The result is sorted by score in reversed order.
+  // The number of keywords parameter is only used as a hint for efficiency.
   std::vector<Index::Item> Rank(const std::vector<Index::Item>& items,
-                                const size_t max_num_records) const;
+                                const size_t max_num_records,
+                                const size_t num_keywords) const;
 
   // Returns the number of records found in the last call to Answer.
   size_t LastRecordsFound() const;

@@ -102,7 +102,7 @@ Index::Index()
     : num_items_(0u),
       total_size_(0u) {}
 
-void Index::ComputeScores(const float k, const float b) {
+void Index::ComputeScores(const float b, const float k) {
   const float num_records = NumRecords();
   const size_t avg_record_size = TotalSize() / num_records;
   for (auto it = index_.begin(), end = index_.end(); it != end; ++it) {

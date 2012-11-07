@@ -48,21 +48,25 @@ string ReadFile(const string& path) {
   return content;
 }
 
+// Writes the given record and score to the stream.
+void WriteUrlScore(const Index::Record& record, const float score,
+                   ostream* stream) {
+  *stream << record.url << " (" << score << ")\n";
+}
+
 // Writes the given record to the given stream, highlighting the given matches.
 // Matches are given as (position, size) pairs.
-void WriteRecord(const Index::Record& record,
+void WriteRecord(const Index::Record& record, const float score,
                  const vector<pair<size_t, size_t> >& matches,
                  ostream* stream) {
-  *stream << "\n" << record.url;
-  // Do not output content for now.
-  return;
+  WriteUrlScore(record, score, stream);
   std::priority_queue<pair<int, int>, vector<pair<int, int> >,
                       std::greater<pair<int, int> > > queue;
   for (auto it = matches.cbegin(), end = matches.cend();
        it != end; ++it) {
     queue.push(*it);
   }
-  size_t pos = 0;
+  size_t pos = 0u;
   while (queue.size()) {
     const size_t match_beg = queue.top().first;
     const size_t match_size = queue.top().second;
@@ -79,6 +83,47 @@ void WriteRecord(const Index::Record& record,
   }
 }
 
+// Writes the snippets of given record to the given stream,
+// highlighting the given matches.
+// Matches are given as (position, size) pairs.
+// TODO(esawin): Shorten output, make it digestible.
+void WriteRecordSnippets(const Index::Record& record, const float score,
+                         const vector<pair<size_t, size_t> >& matches,
+                         const size_t offset,
+                         ostream* stream) {
+  WriteUrlScore(record, score, stream);
+  std::priority_queue<pair<int, int>, vector<pair<int, int> >,
+                      std::greater<pair<int, int> > > queue;
+  for (auto it = matches.cbegin(), end = matches.cend();
+       it != end; ++it) {
+    queue.push(*it);
+  }
+  size_t next_end = 0u;
+  size_t pos = 0u;
+  while (queue.size()) {
+    const size_t match_beg = queue.top().first;
+    const size_t match_size = queue.top().second;
+    queue.pop();
+    if (next_end < match_beg - offset) {
+      *stream << record.content.substr(pos, next_end - pos) << " ... ";
+      pos = next_end;
+    }
+    if (pos <= match_beg) {
+      const size_t beg = std::max(static_cast<int>(pos),
+                                  static_cast<int>(match_beg) -
+                                  static_cast<int>(offset));
+      *stream << record.content.substr(beg, match_beg - beg)
+              << kBoldText << record.content.substr(match_beg, match_size)
+              << kResetMode;
+      next_end = match_beg + match_size + offset;
+    }
+    pos = match_beg + match_size;
+  }
+  if (pos < next_end) {
+    *stream << record.content.substr(pos, next_end - pos);
+  }
+}
+
 // Main function.
 int main(int argc, char** argv) {
   using std::cout;
@@ -88,13 +133,16 @@ int main(int argc, char** argv) {
   using std::flush;
 
   // Parse command line arguments.
-  if (argc != 2 && argc != 3) {
-    cout << "Usage: search-main <CSV-file> [<num-records>]" << endl;
+  if (argc != 2 && argc != 3 && argc != 5) {
+    cout << "Usage: search-main <CSV-file> [<num-records>] "
+         << "[<BM25-b> <BM25-k>]" << endl;
     return 1;
   }
   const string filename = argv[1];
   size_t max_num_records = 3;
-  if (argc == 3) {
+  float bm25_b = 0.75f;
+  float bm25_k = 1.75f;
+  if (argc >= 3) {
     // The second command-line argument sets the max number of records to be
     // viewed.
     std::stringstream ss;
@@ -104,21 +152,33 @@ int main(int argc, char** argv) {
       max_num_records = std::numeric_limits<size_t>::max();
     }
   }
+  if (argc == 5) {
+    // The forth and fifth argument sets the BM25 parameters.
+    std::stringstream ss;
+    ss << argv[3];
+    ss >> bm25_b;
+    ss.str("");
+    ss.clear();
+    ss << argv[4];
+    ss >> bm25_k;
+  }
   Index index;
   Profiler::Start("index-construction.prof");
   auto start = Clock();
   // Alternative index construction by ready whole CSV file at once.
   Index::AddRecordsFromCsv(ReadFile(filename), &index);
-  index.ComputeScores(1.75f, 0.75f);
+  index.ComputeScores(bm25_b, bm25_k);
   auto end = Clock();
   Profiler::Stop();
   auto diff = end - start;
   // Output word frequencies, only required for exercise.
   // index.OutputInvertedListLengths();
-  cout << "Number of records: " << index.NumRecords();
-  cout << "\nNumber of items: " << index.NumItems();
-  cout << "\nIndex construction duration: " << Clock::DiffStr(diff);
-  cout << "\nType q to quit\n";
+  cout << "Number of records: " << index.NumRecords()
+       << "\nNumber of items: " << index.NumItems()
+       << "\nIndex construction duration: " << Clock::DiffStr(diff)
+       << "\nShow top " << max_num_records << " results"
+       << "\nBM25 parameters are b = " << bm25_b << ", k = " << bm25_k
+       << "\nType q to quit\n";
 
   QueryProcessor proc(index);
   while (true) {
@@ -163,8 +223,8 @@ int main(int argc, char** argv) {
         // Found new/last record id, so we output the matches for the previous
         // record id.
         const Index::Record& record = index.RecordById(prev_record_id);
-        WriteRecord(record, matches, &cout);
-        cout << ": " << prev_score << "\n";
+        // WriteRecordSnippets(record, prev_score, matches, 20u, &cout);
+        WriteUrlScore(record, prev_score, &cout);
         ++num_records;
         matches.clear();
       }

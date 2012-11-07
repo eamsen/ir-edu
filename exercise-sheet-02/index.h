@@ -62,7 +62,7 @@ class Index {
   Index();
 
   // Computes BM25 scores, replacing the term frequency based defaults.
-  void ComputeScores(const float k, const float b);
+  void ComputeScores(const float bm25_b, const float bm25_k);
 
   // Returns a const reference to the record of given id.
   const Record& RecordById(const int record_id) const;
