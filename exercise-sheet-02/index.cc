@@ -104,8 +104,7 @@ Index::Index()
 
 void Index::ComputeScores(const float b, const float k) {
   const float num_records = NumRecords();
-  const float inv_avg_record_size = static_cast<float>(num_records) /
-                                    TotalSize();
+  const float inv_avg_record_size = num_records / TotalSize();
   for (auto it = index_.begin(), end = index_.end(); it != end; ++it) {
     const string& keyword = it->first;
     auto freq_it = record_freq_.find(keyword);
@@ -115,7 +114,7 @@ void Index::ComputeScores(const float b, const float k) {
     vector<Item>& items = it->second;
     for (auto it2 = items.begin(), end2 = items.end(); it2 != end2; ++it2) {
       Item& item = *it2;
-      const size_t record_size  = RecordById(item.record_id).content.size();
+      const float record_size  = RecordById(item.record_id).content.size();
       item.score = item.score * (k + 1) /
                    (k * (1 - b + b * record_size * inv_avg_record_size) +
                     item.score) * inv_record_freq;
