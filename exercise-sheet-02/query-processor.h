@@ -13,15 +13,16 @@ class QueryProcessor {
   // Initializes the query processor for given index.
   explicit QueryProcessor(const Index& index);
 
-  // Returns the matching record ids for given query.
-  // The items are sorted by record id, with one item for each keyword
-  // occurrence (therefore possibly multiple items per record id).
-  // Note: the max number of records argument is currently ignored.
+  // Returns the best matching record ids for given query.
+  // The items are sorted by score in reversed order. There is one item per
+  // record for each keyword considered.
   std::vector<Index::Item> Answer(const std::string& query,
-                                  const int max_num_records) const;
+                                  const size_t max_num_records) const;
 
+  // Returns the best matching items ranked by the score.
+  // The result is sorted by score in reversed order.
   std::vector<Index::Item> Rank(const std::vector<Index::Item>& items,
-                                const int k) const;
+                                const size_t max_num_records) const;
 
   // Returns the number of records found in the last call to Answer.
   size_t LastRecordsFound() const;

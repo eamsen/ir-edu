@@ -6,6 +6,7 @@
 #include <fstream>
 #include <sstream>
 #include <queue>
+#include <limits>
 #include "./index.h"
 #include "./query-processor.h"
 #include "./profiler.h"
@@ -99,6 +100,9 @@ int main(int argc, char** argv) {
     std::stringstream ss;
     ss << argv[2];
     ss >> max_num_records;
+    if (max_num_records == 0) {
+      max_num_records = std::numeric_limits<size_t>::max();
+    }
   }
   Index index;
   Profiler::Start("index-construction.prof");

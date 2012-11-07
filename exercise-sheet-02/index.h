@@ -1,6 +1,6 @@
 // Copyright 2012 Eugen Sawin <esawin@me73.com>
-#ifndef EXERCISE_SHEET_02_INVERTED_INDEX_H_
-#define EXERCISE_SHEET_02_INVERTED_INDEX_H_
+#ifndef EXERCISE_SHEET_02_INDEX_H_
+#define EXERCISE_SHEET_02_INDEX_H_
 
 #include <unordered_map>
 #include <string>
@@ -25,19 +25,19 @@ class Index {
   struct Item {
     Item(const int record_id, const std::vector<size_t>& pos, const size_t size,
          const float score)
-        : positions(pos),
-          record_id(record_id),
+        : record_id(record_id),
           size(size),
-          score(score) {}
+          score(score),
+          positions(pos) {}
 
     bool operator==(const Item& rhs) const {
       return record_id == rhs.record_id && positions == rhs.positions;
     }
 
-    std::vector<size_t> positions;
     int record_id;
     size_t size;
     float score;
+    std::vector<size_t> positions;
   };
 
   // The minimum size for a valid keyword.
@@ -110,4 +110,4 @@ class Index {
   size_t total_size_;
 };
 
-#endif  // EXERCISE_SHEET_02_INVERTED_INDEX_H_
+#endif  // EXERCISE_SHEET_02_INDEX_H_

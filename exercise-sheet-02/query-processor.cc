@@ -32,7 +32,7 @@ QueryProcessor::QueryProcessor(const Index& index)
       last_duration_(0u) {}
 
 vector<Index::Item> QueryProcessor::Answer(const string& query,
-                                           const int max_num_records) const {
+                                           const size_t max_num_records) const {
   auto const beg = Clock();
   vector<const vector<Index::Item>*> lists;
   vector<string> keywords = Split(query, kWhitespace);
@@ -43,6 +43,8 @@ vector<Index::Item> QueryProcessor::Answer(const string& query,
     if (items.size()) {
       // Consider this keyword's items, ignore unknown keywords.
       lists.push_back(&items);
+    } else {
+      // Add to ignored keywords list.
     }
   }
   // Boolean intersection.
@@ -53,9 +55,9 @@ vector<Index::Item> QueryProcessor::Answer(const string& query,
 }
 
 vector<Index::Item> QueryProcessor::Rank(const vector<Index::Item>& items,
-                                         const int k) const {
+                                         const size_t max_num_records) const {
   typedef std::pair<float, size_t> ScoreIndexPair;
-  
+
   const size_t num_items = items.size();
   vector<ScoreIndexPair> pairs;
   pairs.reserve(num_items / 2);
@@ -69,10 +71,10 @@ vector<Index::Item> QueryProcessor::Rank(const vector<Index::Item>& items,
     pairs.back().first += item.score;
     prev_record_id = item.record_id;
   }
-  // Sort for the top k records.
+  // Sort for the top records.
   std::sort(pairs.begin(), pairs.end(), std::greater<ScoreIndexPair>());
   // Construct the result in reversed order.
-  size_t pair_index = std::min(static_cast<size_t>(k), pairs.size());
+  size_t pair_index = std::min(max_num_records, pairs.size());
   vector<Index::Item> result;
   while (pair_index--) {
     const float score = pairs[pair_index].first;
@@ -83,7 +85,7 @@ vector<Index::Item> QueryProcessor::Rank(const vector<Index::Item>& items,
       result.back().score = score;
     }
   }
-  return result; 
+  return result;
 }
 
 vector<Index::Item> QueryProcessor::Intersect(

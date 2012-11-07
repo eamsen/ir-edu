@@ -4,6 +4,7 @@
 #include <fstream>
 #include <vector>
 #include <set>
+#include <limits>
 #include "./query-processor.h"
 #include "./index.h"
 
@@ -51,7 +52,7 @@ class QueryProcessorTest : public ::testing::Test {
 
     Index::AddRecordsFromCsv(sentences_, &index_);
     ASSERT_EQ(urls_.size(), index_.NumRecords());
-    num_results_ = 0;
+    num_results_ = std::numeric_limits<size_t>::max();
   }
 
   void TearDown() {
@@ -71,6 +72,10 @@ TEST_F(QueryProcessorTest, emptyAnswer) {
   }
   {
     vector<Index::Item> results = proc.Answer("atoms motor", num_results_);
+    ASSERT_EQ(0, results.size());
+  }
+  {
+    vector<Index::Item> results = proc.Answer("tesla", 0u);
     ASSERT_EQ(0, results.size());
   }
 }
@@ -103,8 +108,9 @@ TEST_F(QueryProcessorTest, teslaAnswer) {
   vector<Index::Item> results = proc.Answer("tesla", num_results_);
   ASSERT_EQ(6, results.size());
   EXPECT_EQ(vector<Index::Item>({ {0, {98}, 5, 0.0f}, {1, {22}, 5, 0.0f},
-                                  {2, {34, 150}, 5, 0.0f}, {3, {13}, 5, 0.0f},
-                                  {4, {0}, 5, 0.0f}, {5, {47}, 5, 0.0f} }),
+                                  {3, {13}, 5, 0.0f},
+                                  {4, {0}, 5, 0.0f}, {5, {47}, 5, 0.0f},
+                                  {2, {34, 150}, 5, 0.0f} }),
             results);
   vector<Index::Item> results2 = proc.Answer("Tesla", num_results_);
   EXPECT_EQ(results, results2);
