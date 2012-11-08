@@ -7,8 +7,14 @@
 #include <algorithm>
 
 namespace es {
+  // Linear-time intersection of the two given containers.
   template<typename Container>
-  Container IntersectLin(const Container& a, const Container& b) {
+  Container IntersectLin(const Container& list1, const Container& list2) {
+    typedef typename Container::value_type value_t;
+
+    // Let a be the smaller list.
+    const Container& a = list1.size() < list2.size() ? list1 : list2;
+    const Container& b = list1.size() > list2.size() ? list1 : list2;
     const auto aend = a.cend();
     const auto bend = b.cend();
     auto ait = a.cbegin();
@@ -16,14 +22,18 @@ namespace es {
     Container result(std::min(a.size(), b.size()));
     size_t size = 0u;
     while (ait != aend && bit != bend) {
-      if (*ait == *bit) {
-        result[size++] = *ait++;
-        ++bit;
-      } else {
-        while (*ait < *bit && ait != aend) {
-          ++ait;
+      const value_t& bvalue = *bit;
+      while (ait != aend && *ait < bvalue) {
+        ++ait;
+      }
+      if (ait != aend) {
+        const value_t& avalue = *ait;
+        while (bit != bend && *bit < avalue) {
+          ++bit;
         }
-        while (*ait > *bit && bit != bend) {
+        if (bit != bend && avalue == *bit) {
+          result[size++] = avalue;
+          ++ait;
           ++bit;
         }
       }

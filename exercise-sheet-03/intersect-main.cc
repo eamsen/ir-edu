@@ -19,6 +19,7 @@ using std::cout;
 using std::endl;
 using std::bind;
 using std::cref;
+using std::min;
 
 // 0: all off, 1: bold, 4: underscore, 5: blinking, 7: reversed, 8: concealed
 // 3x: text, 4x: background
@@ -100,11 +101,12 @@ void Experiment(const size_t num_elements, const size_t ratio) {
          << Clock::DiffStr(time1);
   }
 
+  const size_t num_show = 10u;
   cout << "\nResult: ";
-  std::for_each(result.begin(), result.begin() + std::min(result.size(), 10u),
+  std::for_each(result.begin(), result.begin() + min(result.size(), num_show),
                 [](const int e) { cout << e << " "; });
-  if (result.size() > 10u) {
-    cout << "... (" << result.size() - 10u << " more)";
+  if (result.size() > num_show) {
+    cout << "... (" << result.size() - num_show << " more)";
   }
   cout << endl;
 }
