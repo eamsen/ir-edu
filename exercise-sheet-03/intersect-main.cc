@@ -100,6 +100,7 @@ void Experiment(const size_t num_elements, const size_t ratio) {
   time1 = Duration([&list1]() { std::sort(list1.begin(), list1.end()); });
   time2 = Duration([&list2]() { std::sort(list2.begin(), list2.end()); });
   cout << "Lists sorting time: " << Clock::DiffStr(time1 + time2) << endl;
+
   // Run the experiments, average results over given number of iterations.
   const size_t num_iter = 10u;
   {  // STL intersection.
@@ -113,19 +114,23 @@ void Experiment(const size_t num_elements, const size_t ratio) {
          << Clock::DiffStr(time1) << kResetMode << endl;
   }
   {  // Run linear intersection v1
+    Profiler::Start("linear-v1.prof");
     vector<int> result;
     time1 = AvgDuration([&list1, &list2, &result]() {
       result = es::IntersectLin1(list1, list2);
     }, num_iter);
     cout << "Linear intersection v1 time: " << kBoldText
          << Clock::DiffStr(time1) << kResetMode << endl;
+    Profiler::Stop();
   }
   {  // Run linear intersection v2
+    Profiler::Start("linear-v2.prof");
     vector<int> result;
     time1 = AvgDuration([&list1, &list2, &result]() {
       result = es::IntersectLin2(list1, list2);
     }, num_iter);
     cout << "Linear intersection v2 time: " << kBoldText
          << Clock::DiffStr(time1) << kResetMode << endl;
+    Profiler::Stop();
   }
 }

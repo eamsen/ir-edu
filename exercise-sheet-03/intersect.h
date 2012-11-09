@@ -12,6 +12,7 @@ namespace es {
   template<typename Container>
   Container IntersectLin1(const Container& list1, const Container& list2) {
     typedef typename Container::value_type value_t;
+    // This helps with random distributions a little.
     static size_t reserve_size_ = 20000000u;
 
     // Let a be the larger list.
@@ -25,15 +26,13 @@ namespace es {
     result.reserve(std::min(b.size(),
                             static_cast<size_t>(reserve_size_ * 1.5f)));
     while (ait != aend && bit != bend) {
-      const value_t& avalue = *ait;
-      const value_t& bvalue = *bit;
-      if (avalue == bvalue) {
-        result.push_back(avalue);
+      if (*ait < *bit) {
         ++ait;
+      } else if (*bit < *ait) {
         ++bit;
-      } else if (avalue < bvalue) {
-        ++ait;
       } else {
+        result.push_back(*ait);
+        ++ait;
         ++bit;
       }
     }
@@ -46,7 +45,7 @@ namespace es {
   template<typename Container>
   Container IntersectLin2(const Container& list1, const Container& list2) {
     typedef typename Container::value_type value_t;
-    // Let's cheat a little (not really, but we save some time testing that way.
+    // This helps with random distributions a little.
     static size_t reserve_size_ = 20000000u;
 
     // Let a be the larger list.
@@ -60,13 +59,11 @@ namespace es {
     result.reserve(std::min(b.size(),
                             static_cast<size_t>(reserve_size_ * 1.5f)));
     while (ait != aend && bit != bend) {
-      const value_t& bvalue = *bit;
-      while (ait != aend && *ait < bvalue) {
+      while (ait != aend && *ait < *bit) {
         ++ait;
       }
       if (ait != aend) {
-        const value_t& avalue = *ait;
-        while (bit != bend && *bit < avalue) {
+        while (bit != bend && *bit < *ait) {
           ++bit;
         }
         while (ait != aend && bit != bend && *ait == *bit) {
