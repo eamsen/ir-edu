@@ -24,6 +24,7 @@ static const char* kResetMode = "\033[0m";
 static const char* kBoldText = "\033[1m";
 // static const char* kUnderscoreText = "\033[4m";
 
+// Runs the experiments comparing different intersection techniques.
 void Experiment(const size_t num_elements, const size_t ratio);
 
 int main(int argc, char* argv[]) {
@@ -42,6 +43,8 @@ int main(int argc, char* argv[]) {
   Experiment(num_elements, ratio);
 }
 
+// Returns the average duration in microseconds for the execution of given
+// function over given number of iterations.
 template<typename Func>
 Clock::Diff AvgDuration(const Func& func, const size_t num_iter) {
   const auto beg = Clock();
@@ -51,6 +54,7 @@ Clock::Diff AvgDuration(const Func& func, const size_t num_iter) {
   return (Clock() - beg) / num_iter;
 }
 
+// Returns the duration in microseconds for the execution of given function.
 template<typename Func>
 Clock::Diff Duration(const Func& func) {
   const auto beg = Clock();
@@ -83,7 +87,7 @@ void DistributeUnif(It first, It last,
 void Experiment(const size_t num_elements, const size_t ratio) {
   cout << "Number of elements: " << static_cast<double>(num_elements)
        << "\nRatio: " << ratio << endl;
-  // Generate randomized lists.
+  // Generate the lists.
   vector<int> list1(num_elements / (ratio + 1));
   auto time1 = Duration([&list1, ratio]() {
     DistributeUnif(list1.begin(), list1.end(), ratio);
@@ -102,13 +106,15 @@ void Experiment(const size_t num_elements, const size_t ratio) {
   cout << "Lists sorting time: " << Clock::DiffStr(time1 + time2) << endl;
 
   // Run the experiments, average results over given number of iterations.
+  vector<int> reference_result;
   const size_t num_iter = 10u;
   {  // STL intersection.
-    vector<int> result(min(list1.size(), list2.size()));
+    reference_result.resize(min(list1.size(), list2.size()));
     vector<int>::iterator end;
-    time1 = AvgDuration([&list1, &list2, &result, &end]() {
+    time1 = AvgDuration([&list1, &list2, &reference_result, &end]() {
       end = std::set_intersection(list1.begin(), list1.end(),
-                                  list2.begin(), list2.end(), result.begin());
+                                  list2.begin(), list2.end(),
+                                  reference_result.begin());
     }, num_iter);
     cout << "STL set_intersection time: " << kBoldText
          << Clock::DiffStr(time1) << kResetMode << endl;
@@ -117,20 +123,44 @@ void Experiment(const size_t num_elements, const size_t ratio) {
     Profiler::Start("linear-v1.prof");
     vector<int> result;
     time1 = AvgDuration([&list1, &list2, &result]() {
-      result = es::IntersectLin1(list1, list2);
+      result = IntersectLin1(list1, list2);
     }, num_iter);
     cout << "Linear intersection v1 time: " << kBoldText
          << Clock::DiffStr(time1) << kResetMode << endl;
     Profiler::Stop();
+    assert(reference_result == result);
   }
   {  // Run linear intersection v2
     Profiler::Start("linear-v2.prof");
     vector<int> result;
     time1 = AvgDuration([&list1, &list2, &result]() {
-      result = es::IntersectLin2(list1, list2);
+      result = IntersectLin2(list1, list2);
     }, num_iter);
     cout << "Linear intersection v2 time: " << kBoldText
          << Clock::DiffStr(time1) << kResetMode << endl;
     Profiler::Stop();
+    assert(reference_result == result);
+  }
+  {  // Run linear intersection v3
+    Profiler::Start("linear-v3.prof");
+    vector<int> result;
+    time1 = AvgDuration([&list1, &list2, &result]() {
+      result = IntersectLin3(list1, list2);
+    }, num_iter);
+    cout << "Linear intersection v3 time: " << kBoldText
+         << Clock::DiffStr(time1) << kResetMode << endl;
+    Profiler::Stop();
+    assert(reference_result == result);
+  }
+  {  // Run exponential binary search intersection v1
+    Profiler::Start("exponential-v1.prof");
+    vector<int> result;
+    time1 = AvgDuration([&list1, &list2, &result]() {
+      result = IntersectExp1(list1, list2);
+    }, num_iter);
+    cout << "Exponential intersection v1 time: " << kBoldText
+         << Clock::DiffStr(time1) << kResetMode << endl;
+    Profiler::Stop();
+    assert(reference_result == result);
   }
 }
