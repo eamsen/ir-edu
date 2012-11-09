@@ -2143,7 +2143,10 @@ def CheckStyle(filename, clean_lines, linenum, file_extension, error):
       # It's ok to have many commands in a switch case that fits in 1 line
       not ((cleansed_line.find('case ') != -1 or
             cleansed_line.find('default:') != -1) and
-           cleansed_line.find('break;') != -1)):
+           cleansed_line.find('break;') != -1) and
+      # Allow for inline lambda expressions.
+      # TODO(esawin): Find a better solution.
+      cleansed_line.find('](') == -1):
     error(filename, linenum, 'whitespace/newline', 4,
           'More than one command on the same line')
 
