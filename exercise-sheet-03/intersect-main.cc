@@ -1,14 +1,12 @@
 // Copyright 2012 Eugen Sawin <esawin@me73.com>
 #include <random>
-#include <functional>
 #include <algorithm>
+#include <functional>
 #include <cassert>
 #include <iostream>
 #include <string>
 #include <vector>
 #include <sstream>
-#include <limits>
-#include <queue>
 #include "./intersect.h"
 #include "./profiler.h"
 #include "./clock.h"
@@ -17,8 +15,6 @@ using std::vector;
 using std::string;
 using std::cout;
 using std::endl;
-using std::bind;
-using std::cref;
 using std::min;
 
 // 0: all off, 1: bold, 4: underscore, 5: blinking, 7: reversed, 8: concealed
@@ -26,10 +22,9 @@ using std::min;
 // 0: black, 1: red, 2: green, 3: yellow, 4: blue, 5: magenta, 6: cyan, 7: white
 static const char* kResetMode = "\033[0m";
 static const char* kBoldText = "\033[1m";
-static const char* kUnderscoreText = "\033[4m";
+// static const char* kUnderscoreText = "\033[4m";
 
 void Experiment(const size_t num_elements, const size_t ratio);
-vector<int> RandomList(const size_t num_elements);
 
 int main(int argc, char* argv[]) {
   // Process command-line arguments.
@@ -47,12 +42,13 @@ int main(int argc, char* argv[]) {
   Experiment(num_elements, ratio);
 }
 
-template<typename Func, typename T>
-Clock::Diff Duration(const Func& func, T* ret) {
-  assert(ret);
+template<typename Func>
+Clock::Diff AvgDuration(const Func& func, const size_t num_iter) {
   const auto beg = Clock();
-  *ret = func();
-  return Clock() - beg;
+  for (size_t i = 0; i < num_iter; ++i) {
+    func();
+  }
+  return (Clock() - beg) / num_iter;
 }
 
 template<typename Func>
@@ -62,52 +58,74 @@ Clock::Diff Duration(const Func& func) {
   return Clock() - beg;
 }
 
+// Random integer distribution.
 template<typename It>
 void Randomize(It first, It last) {
-  typedef typename std::iterator_traits<It>::value_type value_type;
+  typedef typename std::iterator_traits<It>::value_type value_t;
   // Random number generator function.
-  static std::function<value_type()> next =
-    bind(std::uniform_int_distribution<value_type>(),
-         std::default_random_engine(std::random_device()()));
+  static std::function<value_t()> next =
+    std::bind(std::uniform_int_distribution<value_t>(),
+              std::default_random_engine(std::random_device()()));
 
   std::generate(first, last, next);
 }
 
-void Experiment(const size_t num_elements, const size_t ratio) {
-  cout << "Number of elements: " << static_cast<double>(num_elements)
-       << "\nRatio: " << ratio;
-  // Generate randomized lists.
-  vector<int> list1(num_elements / (ratio + 1));
-  auto func = bind(Randomize<vector<int>::iterator>,
-                   list1.begin(), list1.end());
-  auto time1 = Duration(func);
-  vector<int> list2(num_elements - list1.size());
-  func = bind(Randomize<vector<int>::iterator>, list2.begin(), list2.end());
-  auto time2 = Duration(func);
-  assert(list1.size() + list2.size() == num_elements);
-  cout << "\nLists construction time: " << Clock::DiffStr(time1 + time2);
-  // Sort the lists.
-  func = bind(std::sort<vector<int>::iterator>, list1.begin(), list1.end());
-  time1 = Duration(func);
-  func = bind(std::sort<vector<int>::iterator>, list2.begin(), list2.end());
-  time2 = Duration(func);
-  cout << "\nLists sorting time: " << Clock::DiffStr(time1 + time2);
-  // Run linear intersection.
-  vector<int> result;
-  auto func2 = bind(es::IntersectLin<vector<int> >, cref(list1), cref(list2));
-  for (int i = 0; i < 5; ++i) {
-    time1 = Duration(func2, &result);
-    cout << "\nLinear intersection time (" << i + 1 << "): "
-         << Clock::DiffStr(time1);
-  }
+// Uniform range-based distribution.
+template<typename It>
+void DistributeUnif(It first, It last,
+                    typename std::iterator_traits<It>::value_type factor) {
+  typedef typename std::iterator_traits<It>::value_type value_t;
 
-  const size_t num_show = 10u;
-  cout << "\nResult: ";
-  std::for_each(result.begin(), result.begin() + min(result.size(), num_show),
-                [](const int e) { cout << e << " "; });
-  if (result.size() > num_show) {
-    cout << "... (" << result.size() - num_show << " more)";
-  }
-  cout << endl;
+  value_t value = 0;  // This is ok for all numeric (non-complex) types.
+  std::generate(first, last, [&value, factor]() { return value++ * factor; });
 }
 
+void Experiment(const size_t num_elements, const size_t ratio) {
+  cout << "Number of elements: " << static_cast<double>(num_elements)
+       << "\nRatio: " << ratio << endl;
+  // Generate randomized lists.
+  vector<int> list1(num_elements / (ratio + 1));
+  auto time1 = Duration([&list1, ratio]() {
+    DistributeUnif(list1.begin(), list1.end(), ratio);
+    // Randomize(list1.begin(), list1.end());
+  });
+  vector<int> list2(num_elements - list1.size());
+  auto time2 = Duration([&list2]() {
+    DistributeUnif(list2.begin(), list2.end(), 1);
+    // Randomize(list2.begin(), list2.end());
+  });
+  assert(list1.size() + list2.size() == num_elements);
+  cout << "Lists construction time: " << Clock::DiffStr(time1 + time2) << endl;
+  // Sort the lists.
+  time1 = Duration([&list1]() { std::sort(list1.begin(), list1.end()); });
+  time2 = Duration([&list2]() { std::sort(list2.begin(), list2.end()); });
+  cout << "Lists sorting time: " << Clock::DiffStr(time1 + time2) << endl;
+  // Run the experiments, average results over given number of iterations.
+  const size_t num_iter = 10u;
+  {  // STL intersection.
+    vector<int> result(min(list1.size(), list2.size()));
+    vector<int>::iterator end;
+    time1 = AvgDuration([&list1, &list2, &result, &end]() {
+      end = std::set_intersection(list1.begin(), list1.end(),
+                                  list2.begin(), list2.end(), result.begin());
+    }, num_iter);
+    cout << "STL set_intersection time: " << kBoldText
+         << Clock::DiffStr(time1) << kResetMode << endl;
+  }
+  {  // Run linear intersection v1
+    vector<int> result;
+    time1 = AvgDuration([&list1, &list2, &result]() {
+      result = es::IntersectLin1(list1, list2);
+    }, num_iter);
+    cout << "Linear intersection v1 time: " << kBoldText
+         << Clock::DiffStr(time1) << kResetMode << endl;
+  }
+  {  // Run linear intersection v2
+    vector<int> result;
+    time1 = AvgDuration([&list1, &list2, &result]() {
+      result = es::IntersectLin2(list1, list2);
+    }, num_iter);
+    cout << "Linear intersection v2 time: " << kBoldText
+         << Clock::DiffStr(time1) << kResetMode << endl;
+  }
+}
