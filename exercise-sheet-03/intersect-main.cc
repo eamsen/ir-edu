@@ -62,17 +62,21 @@ Clock::Diff Duration(const Func& func) {
   return Clock() - beg;
 }
 
-// Random integer distribution.
 template<typename It>
-void Randomize(It first, It last) {
+class Randomizer {
+ public:
   typedef typename std::iterator_traits<It>::value_type value_t;
-  // Random number generator function.
-  static std::function<value_t()> next =
-    std::bind(std::uniform_int_distribution<value_t>(),
-              std::default_random_engine(std::random_device()()));
 
-  std::generate(first, last, next);
-}
+  Randomizer(const value_t min, const value_t max)
+      : next_(std::bind(std::uniform_int_distribution<value_t>(min, max),
+                        std::default_random_engine(std::random_device()()))) {}
+  void Randomize(It first, It last) {
+    std::generate(first, last, next_);
+  }
+
+ private:
+  std::function<value_t()> next_;
+};
 
 // Uniform range-based distribution.
 template<typename It>
@@ -88,15 +92,18 @@ void Experiment(const size_t num_elements, const size_t ratio) {
   cout << "Number of elements: " << static_cast<double>(num_elements)
        << "\nRatio: " << ratio << endl;
   // Generate the lists.
-  vector<int> list1(num_elements / (ratio + 1));
-  auto time1 = Duration([&list1, ratio]() {
-    DistributeUnif(list1.begin(), list1.end(), ratio);
-    // Randomize(list1.begin(), list1.end());
+  const size_t list1_size = num_elements / (ratio + 1);
+  const size_t list2_size = num_elements - list1_size;
+  Randomizer<vector<int>::iterator> randomizer(0u, list2_size);
+  vector<int> list1(list1_size);
+  auto time1 = Duration([&list1, &randomizer]() {
+    // DistributeUnif(list1.begin(), list1.end(), ratio);
+    randomizer.Randomize(list1.begin(), list1.end());
   });
-  vector<int> list2(num_elements - list1.size());
-  auto time2 = Duration([&list2]() {
-    DistributeUnif(list2.begin(), list2.end(), 1);
-    // Randomize(list2.begin(), list2.end());
+  vector<int> list2(list2_size);
+  auto time2 = Duration([&list2, &randomizer]() {
+    // DistributeUnif(list2.begin(), list2.end(), 1);
+    randomizer.Randomize(list2.begin(), list2.end());
   });
   assert(list1.size() + list2.size() == num_elements);
   cout << "Lists construction time: " << Clock::DiffStr(time1 + time2) << endl;
