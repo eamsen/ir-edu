@@ -104,7 +104,6 @@ class Index {
   Record& recordById(const int record_id);
 
   std::unordered_map<std::string, std::vector<Item> > index_;
-  std::unordered_map<std::string, size_t> record_freq_;
   std::vector<Record> records_;
   size_t num_items_;
   size_t total_size_;

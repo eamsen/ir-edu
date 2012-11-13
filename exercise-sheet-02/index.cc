@@ -76,6 +76,7 @@ void Index::AddRecordsFromCsv(const string& file_content,
     // TODO(esawin): assert that!
     if (url != prev_url) {
       // New record found in file contents.
+      assert(url.size());
       record_id = inverted_index->AddRecord(url, content);
       prev_url = url;
     } else {
@@ -106,12 +107,10 @@ void Index::ComputeScores(const float b, const float k) {
   const float num_records = NumRecords();
   const float inv_avg_record_size = num_records / TotalSize();
   for (auto it = index_.begin(), end = index_.end(); it != end; ++it) {
-    const string& keyword = it->first;
-    auto freq_it = record_freq_.find(keyword);
-    assert(freq_it != record_freq_.end());
-    assert(freq_it->second != 0u);
-    const float inv_record_freq = std::log2(num_records / freq_it->second);
     vector<Item>& items = it->second;
+    const float record_freq = items.size();
+    assert(record_freq >= 1.0f);
+    const float inv_record_freq = std::log2(num_records / record_freq);
     for (auto it2 = items.begin(), end2 = items.end(); it2 != end2; ++it2) {
       Item& item = *it2;
       const float record_size  = RecordById(item.record_id).content.size();
@@ -167,7 +166,6 @@ int Index::AddItem(const string& keyword, const int record_id,
     // New keyword, create a new item.
     index_.insert(std::make_pair(low, vector<Item>({Item(record_id, {pos},
                                                     low.size(), 1.0f)})));
-    record_freq_.insert(std::make_pair(low, 1u));
   } else {
     // Keyword already in the index.
     vector<Item>& items = it->second;
@@ -180,7 +178,6 @@ int Index::AddItem(const string& keyword, const int record_id,
     } else {
       // Keyword occurs in a new record.
       items.push_back(Item(record_id, {pos}, low.size(), 1.0f));
-      ++record_freq_[low];
     }
   }
   return ++num_items_;
