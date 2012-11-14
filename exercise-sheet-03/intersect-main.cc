@@ -62,14 +62,18 @@ Clock::Diff Duration(const Func& func) {
   return Clock() - beg;
 }
 
+// Randomization class.
 template<typename It>
 class Randomizer {
  public:
   typedef typename std::iterator_traits<It>::value_type value_t;
 
+  // Initializes the randomizer with given range.
   Randomizer(const value_t min, const value_t max)
       : next_(std::bind(std::uniform_int_distribution<value_t>(min, max),
                         std::default_random_engine(std::random_device()()))) {}
+
+  // Randomizes the given sequence uniformally (with duplicates).
   void Randomize(It first, It last) {
     std::generate(first, last, next_);
   }
@@ -78,7 +82,7 @@ class Randomizer {
   std::function<value_t()> next_;
 };
 
-// Uniform range-based distribution.
+// Basic uniform range-based distribution.
 template<typename It>
 void DistributeUnif(It first, It last,
                     typename std::iterator_traits<It>::value_type factor) {
@@ -88,6 +92,7 @@ void DistributeUnif(It first, It last,
   std::generate(first, last, [&value, factor]() { return value++ * factor; });
 }
 
+// Runs the experiment, comparing all intersection versions.
 void Experiment(const size_t num_elements, const size_t ratio) {
   cout << "Number of elements: " << static_cast<double>(num_elements)
        << "\nRatio: " << ratio << endl;
@@ -126,6 +131,17 @@ void Experiment(const size_t num_elements, const size_t ratio) {
     cout << "STL set_intersection time: " << kBoldText
          << Clock::DiffStr(time1) << kResetMode << endl;
   }
+  {  // Run linear intersection v0
+    Profiler::Start("linear-v0.prof");
+    vector<int> result;
+    time1 = AvgDuration([&list1, &list2, &result]() {
+      result = IntersectLin0(list1, list2);
+    }, num_iter);
+    cout << "Linear intersection v0 time: " << kBoldText
+         << Clock::DiffStr(time1) << kResetMode << endl;
+    Profiler::Stop();
+    assert(reference_result == result);
+  }
   {  // Run linear intersection v1
     Profiler::Start("linear-v1.prof");
     vector<int> result;
@@ -148,24 +164,13 @@ void Experiment(const size_t num_elements, const size_t ratio) {
     Profiler::Stop();
     assert(reference_result == result);
   }
-  {  // Run linear intersection v3
-    Profiler::Start("linear-v3.prof");
+  {  // Run exponential binary search intersection v0
+    Profiler::Start("exponential-v0.prof");
     vector<int> result;
     time1 = AvgDuration([&list1, &list2, &result]() {
-      result = IntersectLin3(list1, list2);
+      result = IntersectExp0(list1, list2);
     }, num_iter);
-    cout << "Linear intersection v3 time: " << kBoldText
-         << Clock::DiffStr(time1) << kResetMode << endl;
-    Profiler::Stop();
-    assert(reference_result == result);
-  }
-  {  // Run exponential binary search intersection v1
-    Profiler::Start("exponential-v1.prof");
-    vector<int> result;
-    time1 = AvgDuration([&list1, &list2, &result]() {
-      result = IntersectExp1(list1, list2);
-    }, num_iter);
-    cout << "Exponential intersection v1 time: " << kBoldText
+    cout << "Exponential intersection v0 time: " << kBoldText
          << Clock::DiffStr(time1) << kResetMode << endl;
     Profiler::Stop();
     assert(reference_result == result);
