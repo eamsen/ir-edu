@@ -119,10 +119,8 @@ Container IntersectExp0(const Container& list1, const Container& list2) {
     }
     // Find match and next start index by binary search.
     search_beg = std::lower_bound(search_beg, search_end, *ait);
-    if (search_beg != search_end) {
-      if (*search_beg == *ait) {
-        result.push_back(*ait);
-      }
+    if (search_beg != search_end && *search_beg == *ait) {
+      result.push_back(*ait);
     }
     ++ait;
   }
