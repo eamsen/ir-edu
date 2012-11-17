@@ -2,15 +2,14 @@ Tutor: Eugen Sawin <esawin@gmail.com>
 
 Total: /20
 
-Exercise 1: /5
+Exercise 1: /10
+  Implementation: /6
+  Documentation & Style: /1
+  Tests: /3
 
-Exercise 2: /5
-  Implementation: /3
-  Tests: /2
-
-Exercise 3: /5
-
-Exercise 4: /5
+Exercise 2: /10
+  Experiment: /7
+  Wiki results: /3
 
 Code comments:
   * I have added some more in-depth code comments in copies of your source files.
