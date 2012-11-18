@@ -10,6 +10,7 @@
 // Linear-time intersection of the two given containers, v0.
 std::vector<int> IntersectLin0(const std::vector<int>& list1,
                                const std::vector<int>& list2) {
+  std::vector<int> result;
   // Let a be the larger list.
   const std::vector<int>& a = list1.size() >= list2.size() ? list1 : list2;
   const std::vector<int>& b = list1.size() < list2.size() ? list1 : list2;
@@ -17,7 +18,6 @@ std::vector<int> IntersectLin0(const std::vector<int>& list1,
   const size_t bsize = b.size();
   size_t ai = 0u;
   size_t bi = 0u;
-  std::vector<int> result;
   result.reserve(bsize);
   while (ai < asize && bi < bsize) {
     while (ai < asize && a[ai] < b[bi]) {
@@ -41,6 +41,7 @@ std::vector<int> IntersectLin0(const std::vector<int>& list1,
 // Linear-time intersection of the two given containers, v1.
 template<typename Container>
 Container IntersectLin1(const Container& list1, const Container& list2) {
+  Container result;
   // Let a be the larger list.
   const Container& a = list1.size() >= list2.size() ? list1 : list2;
   const Container& b = list1.size() < list2.size() ? list1 : list2;
@@ -48,7 +49,6 @@ Container IntersectLin1(const Container& list1, const Container& list2) {
   const auto bend = b.cend();
   auto ait = a.cbegin();
   auto bit = b.cbegin();
-  Container result;
   result.reserve(b.size());
   while (ait != aend && bit != bend) {
     if (*ait < *bit) {
@@ -68,6 +68,7 @@ Container IntersectLin1(const Container& list1, const Container& list2) {
 // Linear-time intersection of the two given containers, v2.
 template<typename Container>
 Container IntersectLin2(const Container& list1, const Container& list2) {
+  Container result;
   // Let a be the larger list.
   const Container& a = list1.size() >= list2.size() ? list1 : list2;
   const Container& b = list1.size() < list2.size() ? list1 : list2;
@@ -75,7 +76,6 @@ Container IntersectLin2(const Container& list1, const Container& list2) {
   const auto bend = b.cend();
   auto ait = a.cbegin();
   auto bit = b.cbegin();
-  Container result;
   result.reserve(b.size());
   while (ait != aend && bit != bend) {
     while (ait != aend && *ait < *bit) {
@@ -99,30 +99,33 @@ Container IntersectLin2(const Container& list1, const Container& list2) {
 // Exponential binary-search intersection of the two given containers, v0.
 template<typename Container>
 Container IntersectExp0(const Container& list1, const Container& list2) {
+  typedef typename Container::value_type value_t;
+
+  Container result;
   // Let a be the smaller list.
   const Container& a = list1.size() <= list2.size() ? list1 : list2;
   const Container& b = list1.size() > list2.size() ? list1 : list2;
-  const auto aend = a.cend();
-  const auto bend = b.cend();
-  Container result;
   result.reserve(a.size());
-  auto ait = a.cbegin();
   auto search_beg = b.cbegin();
-  while (ait != aend && search_beg != bend) {
+  const auto bend = b.cend();
+  for (const value_t& value: a) {
     // Find end index by exponential search.
-    size_t f = 1u;
+    size_t exponent = 1u;
     auto search_end = search_beg;
-    while (search_end != bend && *search_end <= *ait) {
+    while (search_end != bend && *search_end <= value) {
       // Supported by random access iterators only.
-      search_end = std::min(bend, search_end + f);
-      f *= 2u;
+      search_end = std::min(bend, search_end + exponent);
+      exponent *= 2u;
     }
     // Find match and next start index by binary search.
-    search_beg = std::lower_bound(search_beg, search_end, *ait);
-    if (search_beg != search_end && *search_beg == *ait) {
-      result.push_back(*ait);
+    search_beg = std::lower_bound(search_beg, search_end, value);
+    if (search_beg == bend) {
+      // No more matches.
+      break;
+    } else if (*search_beg == value) {
+      // Found a match.
+      result.push_back(value);
     }
-    ++ait;
   }
   assert(result.size() <= a.size());
   return result;
