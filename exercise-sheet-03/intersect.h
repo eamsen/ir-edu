@@ -109,10 +109,11 @@ Container IntersectExp0(const Container& list1, const Container& list2) {
   auto search_beg = b.cbegin();
   const auto bend = b.cend();
   for (const value_t& value: a) {
+    auto search_end = search_beg;
     // Find end index by exponential search.
     size_t exponent = 1u;
-    auto search_end = search_beg;
-    while (search_end != bend && *search_end <= value) {
+    while (search_end != bend && *search_end < value) {
+      search_beg = search_end;
       // Supported by random access iterators only.
       search_end = std::min(bend, search_end + exponent);
       exponent *= 2u;
