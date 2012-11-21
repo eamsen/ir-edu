@@ -118,60 +118,69 @@ void Experiment(const size_t num_elements, const size_t ratio) {
   cout << "Lists sorting time: " << Clock::DiffStr(time1 + time2) << endl;
 
   // Run the experiments, average results over given number of iterations.
-  vector<int> reference_result;
+  const size_t max_result_size = min(list1.size(), list2.size());
+  vector<int> reference_result(max_result_size);
   const size_t num_iter = 10u;
   {  // STL intersection.
-    reference_result.resize(min(list1.size(), list2.size()));
     vector<int>::iterator end;
-    time1 = AvgDuration([&list1, &list2, &reference_result, &end]() {
+    auto time = AvgDuration([&list1, &list2, &reference_result, &end]() {
       end = std::set_intersection(list1.begin(), list1.end(),
                                   list2.begin(), list2.end(),
                                   reference_result.begin());
     }, num_iter);
     cout << "STL set_intersection time: " << kBoldText
-         << Clock::DiffStr(time1) << kResetMode << endl;
+         << Clock::DiffStr(time) << kResetMode << endl;
   }
   {  // Run linear intersection v0
     Profiler::Start("linear-v0.prof");
     vector<int> result;
-    time1 = AvgDuration([&list1, &list2, &result]() {
+    auto time = AvgDuration([&list1, &list2, &result]() {
       result = IntersectLin0(list1, list2);
     }, num_iter);
     cout << "Linear intersection v0 time: " << kBoldText
-         << Clock::DiffStr(time1) << kResetMode << endl;
+         << Clock::DiffStr(time) << kResetMode << endl;
     Profiler::Stop();
     assert(reference_result == result);
   }
   {  // Run linear intersection v1
     Profiler::Start("linear-v1.prof");
-    vector<int> result;
-    time1 = AvgDuration([&list1, &list2, &result]() {
-      result = IntersectLin1(list1, list2);
+    vector<int> result(max_result_size);
+    auto time = AvgDuration([&list1, &list2, &result]() {
+      auto end = IntersectLin1(list1.begin(), list1.end(),
+                               list2.begin(), list2.end(),
+                               result.begin());
+      result.resize(end - result.begin());
     }, num_iter);
     cout << "Linear intersection v1 time: " << kBoldText
-         << Clock::DiffStr(time1) << kResetMode << endl;
+         << Clock::DiffStr(time) << kResetMode << endl;
     Profiler::Stop();
     assert(reference_result == result);
   }
   {  // Run linear intersection v2
     Profiler::Start("linear-v2.prof");
-    vector<int> result;
-    time1 = AvgDuration([&list1, &list2, &result]() {
-      result = IntersectLin2(list1, list2);
+    vector<int> result(max_result_size);
+    auto time = AvgDuration([&list1, &list2, &result]() {
+      auto end = IntersectLin2(list1.begin(), list1.end(),
+                               list2.begin(), list2.end(),
+                               result.begin());
+      result.resize(end - result.begin());
     }, num_iter);
     cout << "Linear intersection v2 time: " << kBoldText
-         << Clock::DiffStr(time1) << kResetMode << endl;
+         << Clock::DiffStr(time) << kResetMode << endl;
     Profiler::Stop();
     assert(reference_result == result);
   }
   {  // Run exponential binary search intersection v0
     Profiler::Start("exponential-v0.prof");
-    vector<int> result;
-    time1 = AvgDuration([&list1, &list2, &result]() {
-      result = IntersectExp0(list1, list2);
+    vector<int> result(max_result_size);
+    auto time = AvgDuration([&list1, &list2, &result]() {
+      auto end = IntersectExp0(list1.begin(), list1.end(),
+                               list2.begin(), list2.end(),
+                               result.begin());
+      result.resize(end - result.begin());
     }, num_iter);
     cout << "Exponential intersection v0 time: " << kBoldText
-         << Clock::DiffStr(time1) << kResetMode << endl;
+         << Clock::DiffStr(time) << kResetMode << endl;
     Profiler::Stop();
     assert(reference_result == result);
   }

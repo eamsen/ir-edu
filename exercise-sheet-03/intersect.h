@@ -8,14 +8,15 @@
 #include <iostream>
 
 // Linear-time intersection of the two given containers, v0.
-std::vector<int> IntersectLin0(const std::vector<int>& list1,
-                               const std::vector<int>& list2) {
+std::vector<int> IntersectLin0(const std::vector<int>& a,
+                               const std::vector<int>& b) {
   std::vector<int> result;
-  // Let a be the larger list.
-  const std::vector<int>& a = list1.size() >= list2.size() ? list1 : list2;
-  const std::vector<int>& b = list1.size() < list2.size() ? list1 : list2;
   const size_t asize = a.size();
   const size_t bsize = b.size();
+  if (asize < bsize) {
+    // Let a be the larger list.
+    return IntersectLin0(b, a);
+  }
   size_t ai = 0u;
   size_t bi = 0u;
   result.reserve(bsize);
@@ -39,96 +40,88 @@ std::vector<int> IntersectLin0(const std::vector<int>& list1,
 }
 
 // Linear-time intersection of the two given containers, v1.
-template<typename Container>
-Container IntersectLin1(const Container& list1, const Container& list2) {
-  Container result;
-  // Let a be the larger list.
-  const Container& a = list1.size() >= list2.size() ? list1 : list2;
-  const Container& b = list1.size() < list2.size() ? list1 : list2;
-  const auto aend = a.cend();
-  const auto bend = b.cend();
-  auto ait = a.cbegin();
-  auto bit = b.cbegin();
-  result.reserve(b.size());
-  while (ait != aend && bit != bend) {
-    if (*ait < *bit) {
-      ++ait;
-    } else if (*bit < *ait) {
-      ++bit;
+template<class InputIt1, class InputIt2, class OutputIt>
+OutputIt IntersectLin1(InputIt1 first1, InputIt1 end1,
+                       InputIt2 first2, InputIt2 end2,
+                       OutputIt result) {
+  // We might drop that to support non-sequenced containers.
+  if (end1 - first1 < end2 - first2) {
+    // Let first container be the larger one.
+    return IntersectLin1(first2, end2, first1, end1, result);
+  }
+  while (first1 != end1 && first2 != end2) {
+    if (*first1 < *first2) {
+      ++first1;
+    } else if (*first2 < *first1) {
+      ++first2;
     } else {
-      result.push_back(*ait);
-      ++ait;
-      ++bit;
+      *result++ = *first1;
+      ++first1;
+      ++first2;
     }
   }
-  assert(result.size() <= b.size());
   return result;
 }
 
 // Linear-time intersection of the two given containers, v2.
-template<typename Container>
-Container IntersectLin2(const Container& list1, const Container& list2) {
-  Container result;
-  // Let a be the larger list.
-  const Container& a = list1.size() >= list2.size() ? list1 : list2;
-  const Container& b = list1.size() < list2.size() ? list1 : list2;
-  const auto aend = a.cend();
-  const auto bend = b.cend();
-  auto ait = a.cbegin();
-  auto bit = b.cbegin();
-  result.reserve(b.size());
-  while (ait != aend && bit != bend) {
-    while (ait != aend && *ait < *bit) {
-      ++ait;
+template<class InputIt1, class InputIt2, class OutputIt>
+OutputIt IntersectLin2(InputIt1 first1, InputIt1 end1,
+                       InputIt2 first2, InputIt2 end2,
+                       OutputIt result) {
+  // We might drop that to support non-sequenced containers.
+  if (end1 - first1 < end2 - first2) {
+    // Let first container be the larger one.
+    return IntersectLin2(first2, end2, first1, end1, result);
+  }
+  while (first1 != end1 && first2 != end2) {
+    while (first1 != end1 && *first1 < *first2) {
+      ++first1;
     }
-    if (ait != aend) {
-      while (bit != bend && *bit < *ait) {
-        ++bit;
-      }
-      while (ait != aend && bit != bend && *ait == *bit) {
-        result.push_back(*ait);
-        ++ait;
-        ++bit;
-      }
+    if (first1 == end1) {
+      break;
+    }
+    while (first2 != end2 && *first2 < *first1) {
+      ++first2;
+    }
+    while (first1 != end1 && first2 != end2 && *first1 == *first2) {
+      *result++ = *first1;
+      ++first1;
+      ++first2;
     }
   }
-  assert(result.size() <= b.size());
   return result;
 }
 
 // Exponential binary-search intersection of the two given containers, v0.
-template<typename Container>
-Container IntersectExp0(const Container& list1, const Container& list2) {
-  typedef typename Container::value_type value_t;
-
-  Container result;
-  // Let a be the smaller list.
-  const Container& a = list1.size() <= list2.size() ? list1 : list2;
-  const Container& b = list1.size() > list2.size() ? list1 : list2;
-  result.reserve(a.size());
-  auto search_beg = b.cbegin();
-  const auto bend = b.cend();
-  for (const value_t& value: a) {
-    auto search_end = search_beg;
+template<class InputIt1, class InputIt2, class OutputIt>
+OutputIt IntersectExp0(InputIt1 first1, InputIt1 end1,
+                       InputIt2 first2, InputIt2 end2,
+                       OutputIt result) {
+  // We might drop that to support non-sequenced containers.
+  if (end1 - first1 > end2 - first2) {
+    // Let first container be the smaller one.
+    return IntersectExp0(first2, end2, first1, end1, result);
+  }
+  for (; first1 != end1; ++first1) {
+    auto search_end = first2;
     // Find end index by exponential search.
     size_t exponent = 1u;
-    while (search_end != bend && *search_end < value) {
-      search_beg = search_end;
+    while (search_end != end2 && *search_end < *first1) {
+      first2 = search_end;
       // Supported by random access iterators only.
-      search_end = std::min(bend, search_end + exponent);
+      search_end = std::min(end2, search_end + exponent);
       exponent *= 2u;
     }
     // Find match and next start index by binary search.
-    search_beg = std::lower_bound(search_beg, search_end, value);
-    if (search_beg == bend) {
-      // No more matches.
+    first2 = std::lower_bound(first2, search_end, *first1);
+    if (first2 == end2) {
+      // Reached end of second list, no more matches.
       break;
-    } else if (*search_beg == value) {
+    } else if (*first2 == *first1) {
       // Found a match.
-      result.push_back(value);
+      *result++ = *first1;
     }
   }
-  assert(result.size() <= a.size());
   return result;
 }
 
