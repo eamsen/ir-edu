@@ -155,6 +155,30 @@ TEST_F(IndexTest, NGrams) {
   EXPECT_EQ(vector<string>({"#in", "inf", "nfo", "for", "orm", "rma", "mat",
                             "ati", "tik", "ik#"}),
             Index::NGrams("informatik", 3));
+  EXPECT_EQ(vector<string>({"#inf", "info", "nfor", "form", "orma", "rmat",
+                            "mati", "atik", "tik#"}),
+            Index::NGrams("informatik", 4));
+  EXPECT_EQ(vector<string>({"#info", "infor", "nform", "forma", "ormat",
+                            "rmati", "matik", "atik#"}),
+            Index::NGrams("informatik", 5));
+  EXPECT_EQ(vector<string>({"#infor", "inform", "nforma", "format", "ormati",
+                            "rmatik", "matik#"}),
+            Index::NGrams("informatik", 6));
+  EXPECT_EQ(vector<string>({"#inform", "informa", "nformat", "formati",
+                            "ormatik", "rmatik#"}),
+            Index::NGrams("informatik", 7));
+  EXPECT_EQ(vector<string>({"#informa", "informat", "nformati", "formatik",
+                            "ormatik#"}),
+            Index::NGrams("informatik", 8));
+  EXPECT_EQ(vector<string>({"#informat", "informati", "nformatik",
+                            "formatik#"}),
+            Index::NGrams("informatik", 9));
+  EXPECT_EQ(vector<string>({"#informati", "informatik", "nformatik#"}),
+            Index::NGrams("informatik", 10));
+  EXPECT_EQ(vector<string>({"#informatik", "informatik#"}),
+            Index::NGrams("informatik", 11));
+  EXPECT_EQ(vector<string>({}),
+            Index::NGrams("informatik", 12));
 }
 
 TEST_F(IndexTest, EditDistance) {
