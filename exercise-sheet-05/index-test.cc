@@ -52,7 +52,7 @@ class IndexTest : public ::testing::Test {
     urls_.push_back("Weird");
     sentences_ += urls_.back() + "\tRoogla!44 mac\n";
 
-    Index::AddRecordsFromCsv(sentences_, 3, &index_);
+    Index::AddRecordsFromCsv(sentences_, &index_);
     ASSERT_EQ(urls_.size() - 1, index_.NumRecords());
   }
 

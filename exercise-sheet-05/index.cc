@@ -55,10 +55,7 @@ auto Index::ExtractKeywords(const string& content, const size_t beg,
   return keywords;
 }
 
-void Index::AddRecordsFromCsv(const string& file_content, const int ngram_n,
-                              Index* index) {
-  assert(ngram_n > 1);
-  index->NGramN(ngram_n);
+void Index::AddRecordsFromCsv(const string& file_content, Index* index) {
   const size_t content_size = file_content.size();
   string prev_url;
   int record_id = kInvalidId;
@@ -106,14 +103,24 @@ void Index::AddRecordsFromCsv(const string& file_content, const int ngram_n,
   // function to a constructor.
 }
 
+vector<string> Index::NGrams(const string& word, const int ngram_n) {
+  assert(ngram_n > 1);
+  const size_t word_size = word.size();
+  const int num_ngrams = word_size - ngram_n + 3;
+  assert(num_ngrams > 1);
+  assert(word_size > 1);
+  vector<string> ngrams(num_ngrams);
+  ngrams[0] = "#" + word.substr(0, ngram_n - 1);
+  for (int n = 1; n < num_ngrams - ngram_n; ++n) {
+    ngrams[n] = word.substr(n - 1, ngram_n);
+  }
+  ngrams.back() = word.substr(word_size - ngram_n + 1, ngram_n - 1) + "#";
+  return ngrams;
+}
+
 Index::Index()
     : num_items_(0u),
       total_size_(0u) {}
-
-void Index::NGramN(const int ngram_n) {
-  assert(ngram_n > 1);
-  ngram_n_ = ngram_n;
-}
 
 void Index::ComputeScores(const float b, const float k) {
   const float num_records = NumRecords();
@@ -129,6 +136,20 @@ void Index::ComputeScores(const float b, const float k) {
       item.score = item.score * (k + 1.0f) /
                    (k * (1.0f - b + b * record_size * inv_avg_record_size) +
                     item.score) * inv_record_freq;
+    }
+  }
+}
+
+void Index::BuildNGrams(const int ngram_n) {
+  assert(ngram_n > 1);
+  ngram_n_ = ngram_n;
+
+  const size_t num_keywords = keywords_.size();
+  for (size_t keyword_id = 0; keyword_id < num_keywords; ++keyword_id) {
+    const Keyword& keyword = KeywordById(keyword_id);
+    vector<string> ngrams = NGrams(keyword, ngram_n_);
+    for (const string& ngram: ngrams) {
+      AddNGram(keyword_id, ngram);
     }
   }
 }
@@ -190,6 +211,17 @@ int Index::AddItem(const int keyword_id, const int record_id,
     keyword.items.push_back(Item(record_id, {pos}, keyword.name.size(), 1.0f));
   }
   return ++num_items_;
+}
+
+void Index::AddNGram(const int keyword_id, const string& ngram) {
+  auto it = ngram_index_.find(ngram);
+  if (it == ngram_index_.end()) {
+    // New n-gram.
+    ngram_index_.insert(std::make_pair(ngram, vector<int>({keyword_id})));
+  } else {
+    // Add keyword to known n-gram.
+    it->second.push_back(keyword_id);
+  }
 }
 
 int Index::AddKeyword(const string& keyword) {

@@ -11,11 +11,18 @@ OBJECTS:=index.o query-processor.o
 
 all: compile test checkstyle
 
-compile: $(MAIN_BINARIES) $(TEST_BINARIES)
+compile-all: compile compile-test 
+
+compile: $(MAIN_BINARIES)
+
+compile-test: $(TEST_BINARIES)
 
 profile: CFLAGS=-Wall -O3 -DPROFILE
 profile: LIBS+=-lprofiler
 profile: clean compile
+
+opt: CFLAGS=-Ofast -flto -mtune=native -DNDEBUG -Wall
+opt: clean compile
 
 debug: CFLAGS=-O0 -g
 debug: compile

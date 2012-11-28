@@ -40,6 +40,7 @@ class Index {
     std::vector<size_t> positions;
   };
 
+  // A keyword consists of its name and its items, i.e. occurrences in records.
   struct Keyword {
     explicit Keyword(const std::string& name) : name(name) {}
     operator std::string() const {
@@ -65,17 +66,20 @@ class Index {
   // Adds all records and items from given CSV content, if the file format is:
   // <url>\t<content>\n
   static void AddRecordsFromCsv(const std::string& file_content,
-                                const int ngram_n,
                                 Index* inverted_index);
+
+  // Creates all n-grams for given word and n value.
+  static std::vector<std::string> NGrams(const std::string& word,
+                                         const int ngram_n);
 
   // Default index initialization.
   Index();
 
-  // Sets the n-gram value for n.
-  void NGramN(const int ngram_n);
-
   // Computes BM25 scores, replacing the term frequency based defaults.
   void ComputeScores(const float bm25_b, const float bm25_k);
+
+  // Builds the n-gram index with given parameter.
+  void BuildNGrams(const int ngram_n);
 
   // Returns a const reference to the record of given id.
   const Record& RecordById(const int record_id) const;
@@ -96,6 +100,9 @@ class Index {
   // Returns the new total number of items in the index.
   int AddItem(const int keyword_id, const int record_id,
               const size_t pos);
+
+  // Adds the given n-gram to keyword mapping to the n-gram index.
+  void AddNGram(const int keyword_id, const std::string& ngram);
 
   int KeywordId(const std::string& keyword) const;
   const Keyword& KeywordById(const int id) const;

@@ -135,51 +135,54 @@ int main(int argc, char** argv) {
   using std::flush;
 
   // Parse command line arguments.
-  if (argc != 2 && argc != 3 && argc != 5) {
-    cout << "Usage: search-main <CSV-file> [<num-records>] "
+  vector<string> args(&argv[0], &argv[argc]);
+  if (argc != 2 && argc != 3 && argc != 4 && argc != 6) {
+    cout << "Usage: search-main <CSV-file> [<num-records>] [<n-gram n>] "
          << "[<BM25-b> <BM25-k>]" << endl;
     return 1;
   }
-  const string filename = argv[1];
+  const string filename = args[1];
   size_t max_num_records = 3;
+  int ngram_n = kNGramN;
   float bm25_b = 0.75f;
   float bm25_k = 1.75f;
   if (argc >= 3) {
     // The second command-line argument sets the max number of records to be
     // viewed.
-    std::stringstream ss;
-    ss << argv[2];
-    ss >> max_num_records;
+    std::stringstream(args[2]) >> max_num_records;
     if (max_num_records == 0) {
       max_num_records = std::numeric_limits<size_t>::max();
     }
   }
-  if (argc == 5) {
+  if (argc >= 4) {
+    // The thirds argument sets the n value for the n-gram index construction.
+    std::stringstream(args[3]) >> ngram_n;
+    if (ngram_n < 3 || ngram_n > 7) {
+      cout << "Choose a value n with 2 < n < 7 for the n-gram construction"
+           << endl;
+      return 1;
+    }
+  }
+  if (argc == 6) {
     // The forth and fifth argument sets the BM25 parameters.
-    std::stringstream ss;
-    ss << argv[3];
-    ss >> bm25_b;
-    ss.str("");
-    ss.clear();
-    ss << argv[4];
-    ss >> bm25_k;
+    std::stringstream(args[4]) >> bm25_b;
+    std::stringstream(args[5]) >> bm25_k;
   }
   Index index;
   Profiler::Start("index-construction.prof");
   auto start = Clock();
-  // Alternative index construction by ready whole CSV file at once.
-  Index::AddRecordsFromCsv(ReadFile(filename), kNGramN, &index);
+  Index::AddRecordsFromCsv(ReadFile(filename), &index);
   index.ComputeScores(bm25_b, bm25_k);
+  index.BuildNGrams(ngram_n);
   auto end = Clock();
   Profiler::Stop();
   auto diff = end - start;
-  // Output word frequencies, only required for exercise.
-  // index.OutputInvertedListLengths();
   cout << "Number of records: " << index.NumRecords()
        << "\nNumber of items: " << index.NumItems()
-       << "\nIndex construction duration: " << Clock::DiffStr(diff)
+       << "\nIndex construction time: " << Clock::DiffStr(diff)
        << "\nShow top " << max_num_records << " results"
-       << "\nBM25 parameters are b = " << bm25_b << ", k = " << bm25_k
+       << "\nN-gram value: " << ngram_n
+       << "\nBM25 parameters: b = " << bm25_b << ", k = " << bm25_k
        << "\nType q to quit\n";
 
   QueryProcessor proc(index);
@@ -245,4 +248,5 @@ int main(int argc, char** argv) {
     }
   }
   cout << "Bye!" << endl;
+  return 0;
 }

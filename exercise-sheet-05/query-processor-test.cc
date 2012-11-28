@@ -50,7 +50,7 @@ class QueryProcessorTest : public ::testing::Test {
                   "then after being successful was told the promise was a " +
                   "joke.\n";
 
-    Index::AddRecordsFromCsv(sentences_, 3, &index_);
+    Index::AddRecordsFromCsv(sentences_, &index_);
     ASSERT_EQ(urls_.size(), index_.NumRecords());
     num_results_ = std::numeric_limits<size_t>::max();
   }
