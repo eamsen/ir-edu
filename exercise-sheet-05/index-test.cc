@@ -134,3 +134,7 @@ TEST_F(IndexTest, GoogleItems) {
   EXPECT_EQ(vector<Index::Item>({ {2, {18, 102}, 6, 0.0f} }),
             items);
 }
+
+TEST_F(IndexTest, EditDistance) {
+  EXPECT_EQ(3, Index::EditDistance("board", "bread"));
+}

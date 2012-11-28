@@ -118,6 +118,36 @@ vector<string> Index::NGrams(const string& word, const int ngram_n) {
   return ngrams;
 }
 
+int Index::EditDistance(const string& word1, const string& word2) {
+  auto Dist = [](int r, int d, int i, bool eq) {
+    const int di_min = std::min(d, i);
+    if (r <= di_min - eq) {
+      return r + !eq;
+    }
+    return di_min + 1;
+  };
+
+  const int size1 = word1.size();
+  const int size2 = word2.size();
+  if (size1 > size2) {
+    return EditDistance(word2, word1);
+  }
+  vector<int> dists;
+  dists.reserve(size1 + 1);
+  for (int i = 0; i < size1 + 1; ++i) {
+    dists.push_back(i);
+  }
+  for (int w2 = 0; w2 < size2; ++w2) {
+    vector<int> new_dists(size1 + 1, dists[0] + 1);
+    for (int w1 = 1; w1 < size1 + 1; ++w1) {
+      new_dists[w1] = Dist(dists[w1 - 1], dists[w1], new_dists[w1 - 1],
+                           word1[w1 - 1] == word2[w2]);
+    }
+    std::swap(dists, new_dists);
+  }
+  return dists.back();
+}
+
 Index::Index()
     : num_items_(0u),
       total_size_(0u) {}

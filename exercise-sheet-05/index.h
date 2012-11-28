@@ -72,6 +72,9 @@ class Index {
   static std::vector<std::string> NGrams(const std::string& word,
                                          const int ngram_n);
 
+  // Returns the edit distance between the given words.
+  static int EditDistance(const std::string& word1, const std::string& word2);
+
   // Default index initialization.
   Index();
 
