@@ -135,6 +135,28 @@ TEST_F(IndexTest, GoogleItems) {
             items);
 }
 
+TEST_F(IndexTest, NGrams) {
+  EXPECT_EQ(vector<string>({}),
+            Index::NGrams("", 3));
+  EXPECT_EQ(vector<string>({}),
+            Index::NGrams("h", 3));
+  EXPECT_EQ(vector<string>({"#h", "h#"}),
+            Index::NGrams("h", 2));
+  EXPECT_EQ(vector<string>({"#ha", "ha#"}),
+            Index::NGrams("ha", 3));
+  EXPECT_EQ(vector<string>({"#ha", "hal", "al#"}),
+            Index::NGrams("hal", 3));
+  EXPECT_EQ(vector<string>({"#ha", "hal", "all", "llo", "lo#"}),
+            Index::NGrams("hallo", 3));
+  EXPECT_EQ(vector<string>({"#hal", "hall", "allo", "llo#"}),
+            Index::NGrams("hallo", 4));
+  EXPECT_EQ(vector<string>({"#hall", "hallo", "allo#"}),
+            Index::NGrams("hallo", 5));
+  EXPECT_EQ(vector<string>({"#in", "inf", "nfo", "for", "orm", "rma", "mat",
+                            "ati", "tik", "ik#"}),
+            Index::NGrams("informatik", 3));
+}
+
 TEST_F(IndexTest, EditDistance) {
   EXPECT_EQ(0, Index::EditDistance("", ""));
   EXPECT_EQ(0, Index::EditDistance("board", "board"));

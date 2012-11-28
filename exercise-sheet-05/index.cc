@@ -107,11 +107,12 @@ vector<string> Index::NGrams(const string& word, const int ngram_n) {
   assert(ngram_n > 1);
   const size_t word_size = word.size();
   const int num_ngrams = word_size - ngram_n + 3;
-  assert(num_ngrams > 1);
-  assert(word_size > 1);
+  if (num_ngrams < 2) {
+    return vector<string>();
+  }
   vector<string> ngrams(num_ngrams);
   ngrams[0] = "#" + word.substr(0, ngram_n - 1);
-  for (int n = 1; n < num_ngrams - ngram_n; ++n) {
+  for (int n = 1; n < num_ngrams - 1; ++n) {
     ngrams[n] = word.substr(n - 1, ngram_n);
   }
   ngrams.back() = word.substr(word_size - ngram_n + 1, ngram_n - 1) + "#";
