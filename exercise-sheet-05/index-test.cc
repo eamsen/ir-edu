@@ -136,5 +136,17 @@ TEST_F(IndexTest, GoogleItems) {
 }
 
 TEST_F(IndexTest, EditDistance) {
+  EXPECT_EQ(0, Index::EditDistance("", ""));
+  EXPECT_EQ(0, Index::EditDistance("board", "board"));
+  EXPECT_EQ(1, Index::EditDistance("a", ""));
+  EXPECT_EQ(1, Index::EditDistance("", "b"));
+  EXPECT_EQ(4, Index::EditDistance("", "abba"));
+  EXPECT_EQ(4, Index::EditDistance("abba", ""));
+  EXPECT_EQ(1, Index::EditDistance("abba", "aba"));
+  EXPECT_EQ(2, Index::EditDistance("abba", "aa"));
+  EXPECT_EQ(2, Index::EditDistance("aba", "arra"));
   EXPECT_EQ(3, Index::EditDistance("board", "bread"));
+  EXPECT_EQ(3, Index::EditDistance("cats", "fast"));
+  EXPECT_EQ(3, Index::EditDistance("spartan", "part"));
+  EXPECT_EQ(4, Index::EditDistance("zeil", "trials"));
 }
