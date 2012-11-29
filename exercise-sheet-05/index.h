@@ -65,8 +65,11 @@ class Index {
 
   // Adds all records and items from given CSV content, if the file format is:
   // <url>\t<content>\n
-  static void AddRecordsFromCsv(const std::string& file_content,
-                                Index* inverted_index);
+  static void AddRecordsFromCsv(const std::string& file_content, Index* index);
+
+  // Adds all keywords from given content, if the file format is:
+  // <keyword>\n
+  static void AddKeywords(const std::string& file_content, Index* index);
 
   // Creates all n-grams for given word and n value.
   static std::vector<std::string> NGrams(const std::string& word,
@@ -129,6 +132,9 @@ class Index {
 
   // Returns the total number of items (keyword occurences) indexed.
   size_t NumItems() const;
+
+  // Returns the number of keywords indexed.
+  size_t NumKeywords() const;
 
  private:
   // Returns a reference to the record of given id.

@@ -220,6 +220,7 @@ TEST_F(IndexTest, Union) {
   vector<int> v9 = {4, 6};
 
   EXPECT_EQ(v0, Index::Union({}));
+  EXPECT_EQ(v0, Index::Union({&v0}));
   EXPECT_EQ(v0, Index::Union({&v0, &v0}));
   EXPECT_EQ(v1, Index::Union({&v1}));
   EXPECT_EQ(v1, Index::Union({&v1, &v1}));

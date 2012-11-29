@@ -11,7 +11,7 @@ OBJECTS:=index.o query-processor.o
 
 all: compile test checkstyle
 
-compile-all: compile compile-test 
+compile-all: compile compile-test
 
 compile: $(MAIN_BINARIES)
 

@@ -104,6 +104,19 @@ void Index::AddRecordsFromCsv(const string& file_content, Index* index) {
   // function to a constructor.
 }
 
+void Index::AddKeywords(const std::string& file_content, Index* index) {
+  const size_t content_size = file_content.size();
+  size_t pos = 0;
+  while (pos < content_size) {
+      const size_t key_end = file_content.find('\n', pos);
+      assert(key_end != string::npos && "Wrong file format");
+      const string keyword = file_content.substr(pos, key_end - pos);
+      // Assuming there are no duplicates in the file.
+      const int key_id = index->AddKeyword(keyword);
+      pos = key_end + 1u;
+  }
+}
+
 vector<string> Index::NGrams(const string& word, const int ngram_n) {
   assert(ngram_n > 1);
   const size_t word_size = word.size();
@@ -323,4 +336,8 @@ size_t Index::NumRecords() const {
 
 size_t Index::NumItems() const {
   return num_items_;
+}
+
+size_t Index::NumKeywords() const {
+  return keywords_.size();
 }
