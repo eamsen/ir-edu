@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <string>
 #include <vector>
+#include "./clock.h"
 
 // The inverted index holding a mapping from keywords (prefixes) to records.
 class Index {
@@ -93,7 +94,7 @@ class Index {
   // value in the provided output vector.
   static std::vector<int> Union(
       const std::vector<const std::vector<int>*>& lists,
-      std::vector<size_t>* freqs);
+      std::vector<int>* freqs);
 
   // Default index initialization.
   Index();
@@ -157,6 +158,10 @@ class Index {
   // Returns the number of keywords indexed.
   size_t NumKeywords() const;
 
+  // Returns the average duration of all the edit distance computations during
+  // the last call to ApproximateMatches in microseconds.
+  Clock::Diff LastEdAvgDuration() const;
+
  private:
   // Returns a reference to the record of given id.
   Record& recordById(const int record_id);
@@ -168,7 +173,8 @@ class Index {
   std::vector<Keyword> keywords_;
   size_t num_items_;
   size_t total_size_;
-  size_t ngram_n_;
+  int ngram_n_;
+  mutable Clock::Diff last_ed_avg_duration_;
 };
 
 #endif  // EXERCISE_SHEET_05_INDEX_H_

@@ -218,18 +218,23 @@ TEST_F(IndexTest, Union) {
   vector<int> v7 = {2, 3};
   vector<int> v8 = {5};
   vector<int> v9 = {4, 6};
+  vector<int> freqs;
 
   EXPECT_EQ(v0, Index::Union({}));
   EXPECT_EQ(v0, Index::Union({&v0}));
-  EXPECT_EQ(v0, Index::Union({&v0, &v0}));
+  EXPECT_EQ(v0, Index::Union({&v0, &v0}, &freqs));
+  EXPECT_EQ(vector<int>({}), freqs);
   EXPECT_EQ(v1, Index::Union({&v1}));
-  EXPECT_EQ(v1, Index::Union({&v1, &v1}));
+  EXPECT_EQ(v1, Index::Union({&v1, &v1}, &freqs));
+  EXPECT_EQ(vector<int>({2}), freqs);
   EXPECT_EQ(v1, Index::Union({&v1, &v1, &v1}));
   EXPECT_EQ(v4, Index::Union({&v4}));
   EXPECT_EQ(v4, Index::Union({&v4, &v4}));
-  EXPECT_EQ(v4, Index::Union({&v4, &v4, &v4}));
+  EXPECT_EQ(v4, Index::Union({&v4, &v4, &v4}, &freqs));
+  EXPECT_EQ(vector<int>({3, 3, 3}), freqs);
 
-  EXPECT_EQ(StlUnion({v0, v1}), Index::Union({&v0, &v1}));
+  EXPECT_EQ(StlUnion({v0, v1}), Index::Union({&v0, &v1}, &freqs));
+  EXPECT_EQ(vector<int>({1}), freqs);
   EXPECT_EQ(StlUnion({v0, v2}), Index::Union({&v0, &v2}));
   EXPECT_EQ(StlUnion({v0, v3}), Index::Union({&v0, &v3}));
   EXPECT_EQ(StlUnion({v0, v4}), Index::Union({&v0, &v4}));
@@ -241,15 +246,19 @@ TEST_F(IndexTest, Union) {
 
   EXPECT_EQ(StlUnion({v1, v2}), Index::Union({&v1, &v2}));
   EXPECT_EQ(StlUnion({v1, v3}), Index::Union({&v1, &v3}));
-  EXPECT_EQ(StlUnion({v1, v4}), Index::Union({&v1, &v4}));
-  EXPECT_EQ(StlUnion({v1, v5}), Index::Union({&v1, &v5}));
+  EXPECT_EQ(StlUnion({v1, v4}), Index::Union({&v1, &v4}, &freqs));
+  EXPECT_EQ(vector<int>({2, 1, 1}), freqs);
+  EXPECT_EQ(StlUnion({v1, v5}), Index::Union({&v1, &v5}, &freqs));
+  EXPECT_EQ(vector<int>({2, 1}), freqs);
   EXPECT_EQ(StlUnion({v1, v6}), Index::Union({&v1, &v6}));
   EXPECT_EQ(StlUnion({v1, v7}), Index::Union({&v1, &v7}));
   EXPECT_EQ(StlUnion({v1, v8}), Index::Union({&v1, &v8}));
   EXPECT_EQ(StlUnion({v1, v9}), Index::Union({&v1, &v9}));
 
-  EXPECT_EQ(StlUnion({v2, v3}), Index::Union({&v2, &v3}));
-  EXPECT_EQ(StlUnion({v2, v4}), Index::Union({&v2, &v4}));
+  EXPECT_EQ(StlUnion({v2, v3}), Index::Union({&v2, &v3}, &freqs));
+  EXPECT_EQ(vector<int>({1, 1}), freqs);
+  EXPECT_EQ(StlUnion({v2, v4}), Index::Union({&v2, &v4}, &freqs));
+  EXPECT_EQ(vector<int>({1, 2, 1}), freqs);
   EXPECT_EQ(StlUnion({v2, v5}), Index::Union({&v2, &v5}));
   EXPECT_EQ(StlUnion({v2, v6}), Index::Union({&v2, &v6}));
   EXPECT_EQ(StlUnion({v2, v7}), Index::Union({&v2, &v7}));
@@ -263,8 +272,10 @@ TEST_F(IndexTest, Union) {
   EXPECT_EQ(StlUnion({v3, v8}), Index::Union({&v3, &v8}));
   EXPECT_EQ(StlUnion({v3, v9}), Index::Union({&v3, &v9}));
 
-  EXPECT_EQ(StlUnion({v4, v5}), Index::Union({&v4, &v5}));
-  EXPECT_EQ(StlUnion({v4, v6}), Index::Union({&v4, &v6}));
+  EXPECT_EQ(StlUnion({v4, v5}), Index::Union({&v4, &v5}, &freqs));
+  EXPECT_EQ(vector<int>({2, 2, 1}), freqs);
+  EXPECT_EQ(StlUnion({v4, v6}), Index::Union({&v4, &v6}, &freqs));
+  EXPECT_EQ(vector<int>({2, 1, 2}), freqs);
   EXPECT_EQ(StlUnion({v4, v7}), Index::Union({&v4, &v7}));
   EXPECT_EQ(StlUnion({v4, v8}), Index::Union({&v4, &v8}));
   EXPECT_EQ(StlUnion({v4, v9}), Index::Union({&v4, &v9}));
@@ -296,7 +307,9 @@ TEST_F(IndexTest, Union) {
   EXPECT_EQ(StlUnion({v0, v1, v2, v3, v4, v5, v6, v7, v8}),
             Index::Union({&v0, &v1, &v2, &v3, &v4, &v5, &v6, &v7, &v8}));
   EXPECT_EQ(StlUnion({v0, v1, v2, v3, v4, v5, v6, v7, v8, v9}),
-            Index::Union({&v0, &v1, &v2, &v3, &v4, &v5, &v6, &v7, &v8, &v9}));
+            Index::Union({&v0, &v1, &v2, &v3, &v4, &v5, &v6, &v7, &v8, &v9},
+                         &freqs));
+  EXPECT_EQ(vector<int>({4, 4, 4, 1, 1, 1}), freqs);
   EXPECT_EQ(StlUnion({v4, v1, v6, v9, v7, v8, v9}),
             Index::Union({&v4, &v1, &v6, &v9, &v7, &v8, &v9}));
 }

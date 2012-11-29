@@ -178,12 +178,12 @@ int Index::EditDistance(const string& word1, const string& word2) {
 }
 
 vector<int> Index::Union(const vector<const vector<int>*>& lists) {
-  vector<size_t> freqs;
+  vector<int> freqs;
   return Union(lists, &freqs);
 }
 
 vector<int> Index::Union(const vector<const vector<int>*>& lists,
-                         vector<size_t>* freqs) {
+                         vector<int>* freqs) {
   using std::make_pair;
   typedef std::priority_queue<std::pair<int, int>, vector<std::pair<int, int> >,
                               std::greater<std::pair<int, int> > > Queue;
@@ -230,7 +230,8 @@ vector<int> Index::Union(const vector<const vector<int>*>& lists,
 Index::Index()
     : num_items_(0u),
       total_size_(0u),
-      ngram_n_(0u) {}
+      ngram_n_(0),
+      last_ed_avg_duration_(0u) {}
 
 vector<string> Index::ApproximateMatches(const std::string& query,
                                          const int max_ed) const {
@@ -266,22 +267,28 @@ vector<string> Index::ApproximateMatches(const std::string& query,
     lists.push_back(&keyword_ids);
   }
   // Merge the lists.
-  vector<size_t> keyword_freqs;
+  vector<int> keyword_freqs;
   vector<int> keyword_ids = Union(lists, &keyword_freqs);
   assert(keyword_ids.size() == keyword_freqs.size());
   // Assemble and filter the resulting keyword strings.
   vector<string> keywords;
   keywords.reserve(keyword_ids.size());
   const size_t query_size = query.size();
+  const int max_ed_n = max_ed * ngram_n_;
+  size_t num_ed_calls = 0u;
+  const Clock beg;
   for (size_t i = 0, num_keywords = keyword_ids.size(); i < num_keywords; ++i) {
     const string& keyword = KeywordById(keyword_ids[i]);
     // TODO(esawin): How to handle queries with wildcards?
-    if (keyword_freqs[i] >= std::max(keyword.size(), query_size) - 3 -
-                            (max_ed - 1) * ngram_n_ &&
-        EditDistance(keyword, query) <= max_ed) {
-      keywords.push_back(keyword);
+    if (keyword_freqs[i] >=
+         static_cast<int>(std::max(keyword.size(), query_size)) - max_ed_n) {
+      ++num_ed_calls;
+      if (EditDistance(keyword, query) <= max_ed) {
+        keywords.push_back(keyword);
+      }
     }
   }
+  last_ed_avg_duration_ = (Clock() - beg) / num_ed_calls;
   return keywords;
 }
 
@@ -434,4 +441,8 @@ size_t Index::NumItems() const {
 
 size_t Index::NumKeywords() const {
   return keywords_.size();
+}
+
+Clock::Diff Index::LastEdAvgDuration() const {
+  return last_ed_avg_duration_;
 }

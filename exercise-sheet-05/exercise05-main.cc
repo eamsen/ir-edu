@@ -111,7 +111,8 @@ int main(int argc, char** argv) {
 
   // Run the experiement on the queries file.
   Clock::Diff query_time = 0u;
-  size_t total_matches = 0u;
+  Clock::Diff ed_time = 0u;
+  size_t num_matches = 0u;
   size_t num_queries = 0u;
   string query_content = ReadFile(queries_filename);
   const size_t content_size = query_content.size();
@@ -121,15 +122,17 @@ int main(int argc, char** argv) {
       assert(query_end != string::npos && "Wrong file format");
       const string query = query_content.substr(pos, query_end - pos);
       pos = query_end + 1u;
-      query_time += Duration([&total_matches, &index, &query]() {
-        total_matches += index.ApproximateMatches(query,
+      query_time += Duration([&num_matches, &index, &query]() {
+        num_matches += index.ApproximateMatches(query,
                                                   std::ceil(query.size() /
                                                   5.0f)).size();
       });
+      ed_time += index.LastEdAvgDuration();
       ++num_queries;
   }
-  cout << "Avg number of matches: " << total_matches / num_queries
+  cout << "Avg number of matches: " << num_matches / num_queries
        << "\nAvg query time: " << Clock::DiffStr(query_time / num_queries)
+       << "\nAvg edit distance time: " << Clock::DiffStr(ed_time / num_queries)
        << endl;
   return 0;
 }
