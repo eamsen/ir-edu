@@ -8,6 +8,7 @@
 #include <vector>
 #include <algorithm>
 #include <cmath>
+#include <queue>
 
 using std::unordered_map;
 using std::string;
@@ -143,6 +144,44 @@ int Index::EditDistance(const string& word1, const string& word2) {
     std::swap(dists, new_dists);
   }
   return dists.back();
+}
+
+vector<int> Index::Union(const vector<const vector<int>*>& lists) {
+  using std::make_pair;
+  typedef std::priority_queue<std::pair<int, int>, vector<std::pair<int, int> >,
+                              std::greater<std::pair<int, int> > > Queue;
+
+  const size_t num_lists = lists.size();
+  vector<int> indices(num_lists, 0);
+  vector<size_t> list_sizes(num_lists, 0);
+  Queue queue;
+  size_t total_size = 0u;
+  for (size_t l = 0u; l < num_lists; ++l) {
+    const vector<int>& list = *lists[l];
+    list_sizes[l] = list.size();
+    if (list_sizes[l]) {
+      // Non-empty list.
+      queue.push(make_pair(list[0], l));
+      total_size += list_sizes[l];
+    }
+  }
+
+  vector<int> results;
+  results.reserve(total_size);
+  while (queue.size()) {
+    const int id = queue.top().first;
+    const int list = queue.top().second;
+    queue.pop();
+    if (results.empty() || results.back() != id) {
+      // New id.
+      results.push_back(id);
+    }
+    if (indices[list] + 1u < list_sizes[list]) {
+      // Increment the list index for active list and push new id to the queue.
+      queue.push(make_pair((*lists[list])[++indices[list]], list));
+    }
+  }
+  return results;
 }
 
 Index::Index()

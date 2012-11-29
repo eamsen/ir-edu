@@ -137,6 +137,8 @@ TEST_F(IndexTest, GoogleItems) {
 
 TEST_F(IndexTest, NGrams) {
   EXPECT_EQ(vector<string>({}),
+            Index::NGrams("", 2));
+  EXPECT_EQ(vector<string>({}),
             Index::NGrams("", 3));
   EXPECT_EQ(vector<string>({}),
             Index::NGrams("h", 3));
@@ -195,4 +197,105 @@ TEST_F(IndexTest, EditDistance) {
   EXPECT_EQ(3, Index::EditDistance("cats", "fast"));
   EXPECT_EQ(3, Index::EditDistance("spartan", "part"));
   EXPECT_EQ(4, Index::EditDistance("zeil", "trials"));
+}
+
+TEST_F(IndexTest, Union) {
+  auto StlUnion = [](const vector<vector<int> >& lists) {
+    set<int> list_union;
+    for (const vector<int>& list: lists) {
+      list_union.insert(list.begin(), list.end());
+    }
+    return vector<int>(list_union.begin(), list_union.end());
+  };
+
+  vector<int> v0;
+  vector<int> v1 = {1};
+  vector<int> v2 = {2};
+  vector<int> v3 = {3};
+  vector<int> v4 = {1, 2, 3};
+  vector<int> v5 = {1, 2};
+  vector<int> v6 = {1, 3};
+  vector<int> v7 = {2, 3};
+  vector<int> v8 = {5};
+  vector<int> v9 = {4, 6};
+
+  EXPECT_EQ(v0, Index::Union({}));
+  EXPECT_EQ(v0, Index::Union({&v0, &v0}));
+  EXPECT_EQ(v1, Index::Union({&v1}));
+  EXPECT_EQ(v1, Index::Union({&v1, &v1}));
+  EXPECT_EQ(v1, Index::Union({&v1, &v1, &v1}));
+  EXPECT_EQ(v4, Index::Union({&v4}));
+  EXPECT_EQ(v4, Index::Union({&v4, &v4}));
+  EXPECT_EQ(v4, Index::Union({&v4, &v4, &v4}));
+
+  EXPECT_EQ(StlUnion({v0, v1}), Index::Union({&v0, &v1}));
+  EXPECT_EQ(StlUnion({v0, v2}), Index::Union({&v0, &v2}));
+  EXPECT_EQ(StlUnion({v0, v3}), Index::Union({&v0, &v3}));
+  EXPECT_EQ(StlUnion({v0, v4}), Index::Union({&v0, &v4}));
+  EXPECT_EQ(StlUnion({v0, v5}), Index::Union({&v0, &v5}));
+  EXPECT_EQ(StlUnion({v0, v6}), Index::Union({&v0, &v6}));
+  EXPECT_EQ(StlUnion({v0, v7}), Index::Union({&v0, &v7}));
+  EXPECT_EQ(StlUnion({v0, v8}), Index::Union({&v0, &v8}));
+  EXPECT_EQ(StlUnion({v0, v9}), Index::Union({&v0, &v9}));
+
+  EXPECT_EQ(StlUnion({v1, v2}), Index::Union({&v1, &v2}));
+  EXPECT_EQ(StlUnion({v1, v3}), Index::Union({&v1, &v3}));
+  EXPECT_EQ(StlUnion({v1, v4}), Index::Union({&v1, &v4}));
+  EXPECT_EQ(StlUnion({v1, v5}), Index::Union({&v1, &v5}));
+  EXPECT_EQ(StlUnion({v1, v6}), Index::Union({&v1, &v6}));
+  EXPECT_EQ(StlUnion({v1, v7}), Index::Union({&v1, &v7}));
+  EXPECT_EQ(StlUnion({v1, v8}), Index::Union({&v1, &v8}));
+  EXPECT_EQ(StlUnion({v1, v9}), Index::Union({&v1, &v9}));
+
+  EXPECT_EQ(StlUnion({v2, v3}), Index::Union({&v2, &v3}));
+  EXPECT_EQ(StlUnion({v2, v4}), Index::Union({&v2, &v4}));
+  EXPECT_EQ(StlUnion({v2, v5}), Index::Union({&v2, &v5}));
+  EXPECT_EQ(StlUnion({v2, v6}), Index::Union({&v2, &v6}));
+  EXPECT_EQ(StlUnion({v2, v7}), Index::Union({&v2, &v7}));
+  EXPECT_EQ(StlUnion({v2, v8}), Index::Union({&v2, &v8}));
+  EXPECT_EQ(StlUnion({v2, v9}), Index::Union({&v2, &v9}));
+
+  EXPECT_EQ(StlUnion({v3, v4}), Index::Union({&v3, &v4}));
+  EXPECT_EQ(StlUnion({v3, v5}), Index::Union({&v3, &v5}));
+  EXPECT_EQ(StlUnion({v3, v6}), Index::Union({&v3, &v6}));
+  EXPECT_EQ(StlUnion({v3, v7}), Index::Union({&v3, &v7}));
+  EXPECT_EQ(StlUnion({v3, v8}), Index::Union({&v3, &v8}));
+  EXPECT_EQ(StlUnion({v3, v9}), Index::Union({&v3, &v9}));
+
+  EXPECT_EQ(StlUnion({v4, v5}), Index::Union({&v4, &v5}));
+  EXPECT_EQ(StlUnion({v4, v6}), Index::Union({&v4, &v6}));
+  EXPECT_EQ(StlUnion({v4, v7}), Index::Union({&v4, &v7}));
+  EXPECT_EQ(StlUnion({v4, v8}), Index::Union({&v4, &v8}));
+  EXPECT_EQ(StlUnion({v4, v9}), Index::Union({&v4, &v9}));
+
+  EXPECT_EQ(StlUnion({v5, v6}), Index::Union({&v5, &v6}));
+  EXPECT_EQ(StlUnion({v5, v7}), Index::Union({&v5, &v7}));
+  EXPECT_EQ(StlUnion({v5, v8}), Index::Union({&v5, &v8}));
+  EXPECT_EQ(StlUnion({v5, v9}), Index::Union({&v5, &v9}));
+
+  EXPECT_EQ(StlUnion({v6, v7}), Index::Union({&v6, &v7}));
+  EXPECT_EQ(StlUnion({v6, v8}), Index::Union({&v6, &v8}));
+  EXPECT_EQ(StlUnion({v6, v9}), Index::Union({&v6, &v9}));
+
+  EXPECT_EQ(StlUnion({v7, v8}), Index::Union({&v7, &v8}));
+  EXPECT_EQ(StlUnion({v7, v9}), Index::Union({&v7, &v9}));
+
+  EXPECT_EQ(StlUnion({v8, v9}), Index::Union({&v8, &v9}));
+
+  EXPECT_EQ(StlUnion({v0, v1, v2}), Index::Union({&v0, &v1, &v2}));
+  EXPECT_EQ(StlUnion({v0, v1, v2, v3}), Index::Union({&v0, &v1, &v2, &v3}));
+  EXPECT_EQ(StlUnion({v0, v1, v2, v3, v4}),
+            Index::Union({&v0, &v1, &v2, &v3, &v4}));
+  EXPECT_EQ(StlUnion({v0, v1, v2, v3, v4, v5}),
+            Index::Union({&v0, &v1, &v2, &v3, &v4, &v5}));
+  EXPECT_EQ(StlUnion({v0, v1, v2, v3, v4, v5, v6}),
+            Index::Union({&v0, &v1, &v2, &v3, &v4, &v5, &v6}));
+  EXPECT_EQ(StlUnion({v0, v1, v2, v3, v4, v5, v6, v7}),
+            Index::Union({&v0, &v1, &v2, &v3, &v4, &v5, &v6, &v7}));
+  EXPECT_EQ(StlUnion({v0, v1, v2, v3, v4, v5, v6, v7, v8}),
+            Index::Union({&v0, &v1, &v2, &v3, &v4, &v5, &v6, &v7, &v8}));
+  EXPECT_EQ(StlUnion({v0, v1, v2, v3, v4, v5, v6, v7, v8, v9}),
+            Index::Union({&v0, &v1, &v2, &v3, &v4, &v5, &v6, &v7, &v8, &v9}));
+  EXPECT_EQ(StlUnion({v4, v1, v6, v9, v7, v8, v9}),
+            Index::Union({&v4, &v1, &v6, &v9, &v7, &v8, &v9}));
 }

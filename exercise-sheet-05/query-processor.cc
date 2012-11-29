@@ -109,6 +109,7 @@ vector<Index::Item> QueryProcessor::Intersect(
   }
 
   vector<Index::Item> results;
+  // TODO(esawin): Shouldn't this be the size of the smallest list?
   results.reserve(num_lists * max_list_size);
   while (queue.size()) {
     const int record_id = queue.top().first;

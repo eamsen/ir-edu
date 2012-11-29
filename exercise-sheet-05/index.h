@@ -75,6 +75,10 @@ class Index {
   // Returns the edit distance between the given words.
   static int EditDistance(const std::string& word1, const std::string& word2);
 
+  // Returns the union of the given lists.
+  static std::vector<int> Union(
+      const std::vector<const std::vector<int>*>& lists);
+
   // Default index initialization.
   Index();
 
