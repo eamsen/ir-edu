@@ -8,6 +8,7 @@
 #include <queue>
 #include <limits>
 #include <functional>
+#include <cmath>
 #include "./index.h"
 #include "./profiler.h"
 #include "./clock.h"
@@ -106,7 +107,29 @@ int main(int argc, char** argv) {
   cout << "Number of keywords: " << index.NumKeywords()
        << "\nN-gram value: " << ngram_n
        << "\nIndex construction time: " << Clock::DiffStr(index_time)
-       << "\nType q to quit\n";
+       << endl;
 
+  // Run the experiement on the queries file.
+  Clock::Diff query_time = 0u;
+  size_t total_matches = 0u;
+  size_t num_queries = 0u;
+  string query_content = ReadFile(queries_filename);
+  const size_t content_size = query_content.size();
+  size_t pos = 0;
+  while (pos < content_size) {
+      const size_t query_end = query_content.find('\n', pos);
+      assert(query_end != string::npos && "Wrong file format");
+      const string query = query_content.substr(pos, query_end - pos);
+      pos = query_end + 1u;
+      query_time += Duration([&total_matches, &index, &query]() {
+        total_matches += index.ApproximateMatches(query,
+                                                  std::ceil(query.size() /
+                                                  5.0f)).size();
+      });
+      ++num_queries;
+  }
+  cout << "Avg number of matches: " << total_matches / num_queries
+       << "\nAvg query time: " << Clock::DiffStr(query_time / num_queries)
+       << endl;
   return 0;
 }
