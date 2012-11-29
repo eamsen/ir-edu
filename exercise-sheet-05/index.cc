@@ -16,6 +16,24 @@ using std::vector;
 
 const size_t Index::kMinKeywordSize = 2;
 const int Index::kInvalidId = -1;
+const char* Index::kWhitespace = "\n\r\t ";
+
+vector<string> Index::Split(const string& content, const string& delims) {
+  vector<string> items;
+  size_t pos = content.find_first_not_of(delims);
+  while (pos != string::npos) {
+    size_t end = content.find_first_of(delims, pos);
+    if (end == string::npos) {
+      // Last item found.
+      items.push_back(content.substr(pos));
+    } else {
+      // Item found.
+      items.push_back(content.substr(pos, end - pos));
+    }
+    pos = content.find_first_not_of(delims, end);
+  }
+  return items;
+}
 
 auto Index::ExtractKeywords(const string& content, const size_t beg,
                             const size_t end) -> vector<PosSize> {
@@ -112,7 +130,7 @@ void Index::AddKeywords(const std::string& file_content, Index* index) {
       assert(key_end != string::npos && "Wrong file format");
       const string keyword = file_content.substr(pos, key_end - pos);
       // Assuming there are no duplicates in the file.
-      const int key_id = index->AddKeyword(keyword);
+      index->AddKeyword(keyword);
       pos = key_end + 1u;
   }
 }
@@ -160,10 +178,17 @@ int Index::EditDistance(const string& word1, const string& word2) {
 }
 
 vector<int> Index::Union(const vector<const vector<int>*>& lists) {
+  vector<size_t> freqs;
+  return Union(lists, &freqs);
+}
+
+vector<int> Index::Union(const vector<const vector<int>*>& lists,
+                         vector<size_t>* freqs) {
   using std::make_pair;
   typedef std::priority_queue<std::pair<int, int>, vector<std::pair<int, int> >,
                               std::greater<std::pair<int, int> > > Queue;
 
+  assert(freqs);
   const size_t num_lists = lists.size();
   vector<int> indices(num_lists, 0);
   vector<size_t> list_sizes(num_lists, 0);
@@ -181,6 +206,8 @@ vector<int> Index::Union(const vector<const vector<int>*>& lists) {
 
   vector<int> results;
   results.reserve(total_size);
+  freqs->clear();
+  freqs->reserve(total_size);
   while (queue.size()) {
     const int id = queue.top().first;
     const int list = queue.top().second;
@@ -188,18 +215,74 @@ vector<int> Index::Union(const vector<const vector<int>*>& lists) {
     if (results.empty() || results.back() != id) {
       // New id.
       results.push_back(id);
+      freqs->push_back(0);
     }
     if (indices[list] + 1u < list_sizes[list]) {
       // Increment the list index for active list and push new id to the queue.
       queue.push(make_pair((*lists[list])[++indices[list]], list));
     }
+    // Increase the last id's frequency.
+    ++freqs->back();
   }
   return results;
 }
 
 Index::Index()
     : num_items_(0u),
-      total_size_(0u) {}
+      total_size_(0u),
+      ngram_n_(0u) {}
+
+vector<string> Index::ApproximateMatches(const std::string& query,
+                                         const int max_ed) const {
+  assert(ngram_n_ > 1);
+  // Generate the n-grams for the given query.
+  vector<string> query_parts = Split(query, "*");
+  vector<string> ngrams;
+  for (size_t i = 0, num_parts = query_parts.size(); i < num_parts; ++i) {
+    vector<string> tmp_ngrams = NGrams(query_parts[i], ngram_n_);
+    if (tmp_ngrams.size() == 0) {
+      continue;
+    }
+    auto beg = tmp_ngrams.begin();
+    auto end = tmp_ngrams.end();
+    if (i > 0) {
+      // We are not at the beginning, the first n-gram is not valid.
+      ++beg;
+    }
+    if (i < num_parts - 1) {
+      // We are not at the end, the last n-gram is not valid.
+      --end;
+    }
+    if (beg < end) {
+      // We still have n-grams left, remember them.
+      ngrams.insert(ngrams.end(), beg, end);
+    }
+  }
+  // Assemble the inverted lists for the n-grams.
+  vector<const vector<int>*> lists;
+  lists.reserve(ngrams.size());
+  for (const string& ngram: ngrams) {
+    const vector<int>& keyword_ids = NGramItems(ngram);
+    lists.push_back(&keyword_ids);
+  }
+  // Merge the lists.
+  vector<size_t> keyword_freqs;
+  vector<int> keyword_ids = Union(lists, &keyword_freqs);
+  // Assemble the resulting keyword strings.
+  vector<string> keywords;
+  keywords.reserve(keyword_ids.size());
+  const size_t query_size = query.size();
+  for (size_t i = 0, num_keywords = keyword_ids.size(); i < num_keywords; ++i) {
+    const string& keyword = KeywordById(keyword_ids[i]);
+    // TODO(esawin): How to handle query size with wildcards?
+    if (keyword_freqs[i] >= std::max(keyword.size(), query_size) - 1 -
+                            (max_ed - 1) * ngram_n_ &&
+        EditDistance(keyword, query) <= max_ed) {
+      keywords.push_back(keyword);
+    }
+  }
+  return keywords;
+}
 
 void Index::ComputeScores(const float b, const float k) {
   const float num_records = NumRecords();
@@ -301,6 +384,16 @@ void Index::AddNGram(const int keyword_id, const string& ngram) {
     // Add keyword to known n-gram.
     it->second.push_back(keyword_id);
   }
+}
+
+const vector<int>& Index::NGramItems(const string& ngram) const {
+  static vector<int> _empty;
+
+  auto it = ngram_index_.find(ngram);
+  if (it == ngram_index_.end()) {
+    return _empty;
+  }
+  return it->second;
 }
 
 int Index::AddKeyword(const string& keyword) {

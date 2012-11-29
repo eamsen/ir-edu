@@ -7,25 +7,6 @@
 using std::string;
 using std::vector;
 
-const char* kWhitespace = "\n\r\t ";
-
-vector<string> Split(const string& content, const string& delims) {
-  vector<string> items;
-  size_t pos = content.find_first_not_of(delims);
-  while (pos != string::npos) {
-    size_t end = content.find_first_of(delims, pos);
-    if (end == string::npos) {
-      // Last item found.
-      items.push_back(content.substr(pos));
-    } else {
-      // Item found.
-      items.push_back(content.substr(pos, end - pos));
-    }
-    pos = content.find_first_not_of(delims, end);
-  }
-  return items;
-}
-
 QueryProcessor::QueryProcessor(const Index& index)
     : index_(index),
       last_num_records_(0u),
@@ -35,7 +16,7 @@ vector<Index::Item> QueryProcessor::Answer(const string& query,
                                            const size_t max_num_records) const {
   auto const beg = Clock();
   vector<const vector<Index::Item>*> lists;
-  vector<string> keywords = Split(query, kWhitespace);
+  vector<string> keywords = Index::Split(query, Index::kWhitespace);
   for (auto it = keywords.cbegin(), end = keywords.cend();
        it != end; ++it) {
     const string& keyword = *it;

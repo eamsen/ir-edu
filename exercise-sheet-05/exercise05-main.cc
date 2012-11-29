@@ -104,8 +104,8 @@ int main(int argc, char** argv) {
   index_time += Duration(std::bind(&Index::BuildNGrams, &index, ngram_n));
   Profiler::Stop();
   cout << "Number of keywords: " << index.NumKeywords()
-       << "\nIndex construction time: " << Clock::DiffStr(index_time)
        << "\nN-gram value: " << ngram_n
+       << "\nIndex construction time: " << Clock::DiffStr(index_time)
        << "\nType q to quit\n";
 
   return 0;

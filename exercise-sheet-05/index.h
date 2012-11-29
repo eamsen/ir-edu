@@ -43,7 +43,7 @@ class Index {
   // A keyword consists of its name and its items, i.e. occurrences in records.
   struct Keyword {
     explicit Keyword(const std::string& name) : name(name) {}
-    operator std::string() const {
+    operator const std::string&() const {
       return name;
     }
     std::string name;
@@ -55,6 +55,13 @@ class Index {
 
   // Invalid index value, used for record ids.
   static const int kInvalidId;
+
+  // All whitespace characters, useful as default delimeter for splitting.
+  static const char* kWhitespace;
+
+  // Splits the content at any of given delimeters.
+  static std::vector<std::string> Split(const std::string& content,
+                                        const std::string& delims);
 
   // Finds all valid keywords within given content string and returns their
   // position and sizes. A keyword must contain at least one alphabetic
@@ -82,8 +89,19 @@ class Index {
   static std::vector<int> Union(
       const std::vector<const std::vector<int>*>& lists);
 
+  // Returns the union of the given lists and writes the frequency of each
+  // value in the provided output vector.
+  static std::vector<int> Union(
+      const std::vector<const std::vector<int>*>& lists,
+      std::vector<size_t>* freqs);
+
   // Default index initialization.
   Index();
+
+  // Returns all keyword, which are within the given edit
+  // distance from the given keyword.
+  std::vector<std::string> ApproximateMatches(const std::string& keyword,
+                                              const int max_ed) const;
 
   // Computes BM25 scores, replacing the term frequency based defaults.
   void ComputeScores(const float bm25_b, const float bm25_k);
@@ -113,6 +131,9 @@ class Index {
 
   // Adds the given n-gram to keyword mapping to the n-gram index.
   void AddNGram(const int keyword_id, const std::string& ngram);
+
+  // Returns aht keyword ids for given n-gram.
+  const std::vector<int>& NGramItems(const std::string& ngram) const;
 
   int KeywordId(const std::string& keyword) const;
   const Keyword& KeywordById(const int id) const;
@@ -145,9 +166,9 @@ class Index {
   std::unordered_map<std::string, int> keyword_index_;
   std::unordered_map<std::string, std::vector<int> > ngram_index_;
   std::vector<Keyword> keywords_;
-  size_t ngram_n_;
   size_t num_items_;
   size_t total_size_;
+  size_t ngram_n_;
 };
 
 #endif  // EXERCISE_SHEET_05_INDEX_H_
