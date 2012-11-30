@@ -198,7 +198,7 @@ int Index::EditDistance(const string& word1, const string& word2) {
       new_dists[d1] = Dist(dists[d1 - 1], dists[d1], new_dists[d1 - 1],
                            word1[d1 - 1] == word2[w2]);
     }
-    std::swap(dists, new_dists);
+    dists.swap(new_dists);
   }
   return dists.back();
 }
