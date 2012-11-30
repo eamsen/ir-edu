@@ -110,7 +110,7 @@ int main(int argc, char** argv) {
        << kBoldText << index_time << kResetMode
        << endl;
 
-  // Run the experiement on the queries file.
+  // Run the experiment on the queries file.
   Clock::Diff query_time = 0;
   Clock::Diff ed_time = 0;
   size_t num_matches = 0u;
