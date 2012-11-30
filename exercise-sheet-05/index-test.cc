@@ -184,6 +184,7 @@ TEST_F(IndexTest, NGrams_words) {
   EXPECT_EQ(vector<string>({}), Index::NGrams(vector<string>({"", "", ""}), 3));
   EXPECT_EQ(vector<string>({}), Index::NGrams(vector<string>({"h"}), 3));
   // Query: h.
+  EXPECT_EQ(vector<string>({"h"}), Index::Split("h", "*"));
   EXPECT_EQ(vector<string>({"#h", "h#"}),
             Index::NGrams(vector<string>({"h"}), 2));
   // Query: ha.
@@ -191,18 +192,23 @@ TEST_F(IndexTest, NGrams_words) {
             Index::NGrams(vector<string>({"ha"}), 2));
   EXPECT_EQ(vector<string>({"#ha", "ha#"}),
             Index::NGrams(vector<string>({"ha"}), 3));
-  EXPECT_EQ(vector<string>({"#ha", "lo#"}),
   // Query: ha*lo.
+  EXPECT_EQ(vector<string>({"ha", "lo"}), Index::Split("ha*lo", "*"));
+  EXPECT_EQ(vector<string>({"#ha", "lo#"}),
             Index::NGrams(vector<string>({"ha", "lo"}), 3));
   // Query: h*a*l*l*o.
+  EXPECT_EQ(vector<string>({"h", "a", "l", "l", "o"}),
+            Index::Split("h*a*l*l*o", "*"));
   EXPECT_EQ(vector<string>({}),
             Index::NGrams(vector<string>({"h", "a", "l", "l", "o"}), 3));
   // Query: ha*ll*.
-  EXPECT_EQ(vector<string>({"#ha"}),
-            Index::NGrams(vector<string>({"ha", "ll", ""}), 3));
+  EXPECT_EQ(vector<string>({"ha", "ll"}), Index::Split("ha*ll*", "*"));
+  EXPECT_EQ(vector<string>({"#ha", "ll#"}),
+            Index::NGrams(vector<string>({"ha", "ll"}), 3));
   // Query: ha*nuk*.
-  EXPECT_EQ(vector<string>({"#ha", "nuk"}),
-            Index::NGrams(vector<string>({"ha", "nuk", ""}), 3));
+  EXPECT_EQ(vector<string>({"ha", "nuk"}), Index::Split("ha*nuk*", "*"));
+  EXPECT_EQ(vector<string>({"#ha", "nuk", "uk#"}),
+            Index::NGrams(vector<string>({"ha", "nuk"}), 3));
   // Query: in*tik.
   EXPECT_EQ(vector<string>({"#in", "tik", "ik#"}),
             Index::NGrams(vector<string>({"in", "tik"}), 3));
