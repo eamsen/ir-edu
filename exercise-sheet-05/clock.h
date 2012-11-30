@@ -101,12 +101,12 @@ class Clock {
   static constexpr double kSecInMicro = 1.0 / kMicroInSec;
   static constexpr double kMinInMicro = 1.0 / kMicroInMin;
 
-  // Initialised the clock with its default type and the current clock time.
+  // Initializes the clock with its default type and the current clock time.
   explicit Clock() {
     clock_gettime(kDefType, &time_);
   }
 
-  // Initialised the clock with given type and the current clock time.
+  // Initializes the clock with given type and the current clock time.
   explicit Clock(Type type) {
     clock_gettime(type, &time_);
   }
