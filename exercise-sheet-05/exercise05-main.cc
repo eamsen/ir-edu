@@ -107,12 +107,12 @@ int main(int argc, char** argv) {
   cout << "Number of keywords: " << index.NumKeywords()
        << "\nN-gram value: " << ngram_n
        << "\nIndex construction time: "
-       << kBoldText << Clock::DiffStr(index_time) << kResetMode
+       << kBoldText << index_time << kResetMode
        << endl;
 
   // Run the experiement on the queries file.
-  Clock::Diff query_time = 0u;
-  Clock::Diff ed_time = 0u;
+  Clock::Diff query_time = 0;
+  Clock::Diff ed_time = 0;
   size_t num_matches = 0u;
   size_t num_queries = 0u;
   string query_content = ReadFile(queries_filename);
@@ -133,9 +133,9 @@ int main(int argc, char** argv) {
   cout << "Avg number of matches: "
        << kBoldText << num_matches / num_queries << kResetMode
        << "\nAvg query time: "
-       << kBoldText << Clock::DiffStr(query_time / num_queries) << kResetMode
+       << kBoldText << (query_time / num_queries) << kResetMode
        << "\nAvg edit distance time: "
-       << kBoldText << Clock::DiffStr(ed_time / num_queries) << kResetMode
+       << kBoldText << (ed_time / num_queries) << kResetMode
        << endl;
   return 0;
 }

@@ -12,7 +12,73 @@
 class Clock {
  public:
   // Type for time differences.
-  typedef int64_t Diff;
+  class Diff {
+   public:
+    typedef int64_t ValueType;
+
+    // Implicit constructor.
+    Diff(const ValueType& value)  // NOLINT
+        : value_(value) {}
+
+    // Self-assignment addition.
+    Diff& operator+=(const Diff& rhs) {
+      value_ += rhs.value_;
+      return *this;
+    }
+
+    // Self-assignment subtraction.
+    Diff& operator-=(const Diff& rhs) {
+      value_ -= rhs.value_;
+      return *this;
+    }
+
+    // Addition.
+    Diff operator+(const Diff& rhs) const {
+      return Diff(value_ + rhs.value_);
+    }
+
+    // Subtraction.
+    Diff operator-(const Diff& rhs) const {
+      return Diff(value_ - rhs.value_);
+    }
+
+    // Division.
+    Diff operator/(const Diff& rhs) const {
+      return Diff(value_ / rhs.value_);
+    }
+
+    // Multiplication.
+    Diff operator*(const Diff& rhs) const {
+      return Diff(value_ * rhs.value_);
+    }
+
+    // Returns the string representation.
+    std::string Str() const {
+      std::stringstream ss;
+      ss.setf(std::ios::fixed, std::ios::floatfield);
+      ss.precision(2);
+      if (value_ >= kMicroInMin) {
+        const double min = value_ * kMinInMicro;
+        ss << min << "min";
+      } else if (value_ >= kMicroInSec) {
+        const double sec = value_ * kSecInMicro;
+        ss << sec << "s";
+      } else if (value_ >= kMicroInMilli) {
+        const double milli = value_ * kMilliInMicro;
+        ss << milli << "ms";
+      } else {
+        ss << value_ << "µs";
+      }
+      return ss.str();
+    }
+
+    const ValueType& value() const {
+      return value_;
+    }
+
+   private:
+    ValueType value_;
+  };
 
   // Clock types used to switch between process, thread and wallclock time.
   enum Type {
@@ -23,12 +89,12 @@ class Clock {
   };
 
   // Constants used to convert between different time units.
-  static const Diff kSecInMin = 60;
-  static const Diff kMilliInSec = 1000;
-  static const Diff kMicroInMilli = 1000;
-  static const Diff kNanoInMicro = 1000;
-  static const Diff kMicroInSec = kMilliInSec * kMicroInMilli;
-  static const Diff kMicroInMin = kMicroInSec * kSecInMin;
+  static const Diff::ValueType kSecInMin = 60;
+  static const Diff::ValueType kMilliInSec = 1000;
+  static const Diff::ValueType kMicroInMilli = 1000;
+  static const Diff::ValueType kNanoInMicro = 1000;
+  static const Diff::ValueType kMicroInSec = kMilliInSec * kMicroInMilli;
+  static const Diff::ValueType kMicroInMin = kMicroInSec * kSecInMin;
   static constexpr double kMilliInMicro = 1.0 / kMicroInMilli;
   static constexpr double kMicroInNano = 1.0 / kNanoInMicro;
   static constexpr double kSecInMicro = 1.0 / kMicroInSec;
@@ -47,33 +113,8 @@ class Clock {
   // Returns the time difference in microseconds between this and the given
   // clock's time.
   Diff operator-(const Clock& rhs) const {
-    return (time_.tv_sec - rhs.time_.tv_sec) * kMicroInSec +
-           (time_.tv_nsec - rhs.time_.tv_nsec) * kMicroInNano;
-  }
-
-  // Returns the time duration between given times in microseconds.
-  static Diff Duration(const Clock& beg, const Clock& end) {
-    return end - beg;
-  }
-
-  // Returns the string representation of the given time difference.
-  static std::string DiffStr(const Diff& diff) {
-    std::stringstream ss;
-    ss.setf(std::ios::fixed, std::ios::floatfield);
-    ss.precision(2);
-    if (diff >= kMicroInMin) {
-      const double min = diff * kMinInMicro;
-      ss << min << "min";
-    } else if (diff >= kMicroInSec) {
-      const double sec = diff * kSecInMicro;
-      ss << sec << "s";
-    } else if (diff >= kMicroInMilli) {
-      const double milli = diff * kMilliInMicro;
-      ss << milli << "ms";
-    } else {
-      ss << diff << "µs";
-    }
-    return ss.str();
+    return Diff((time_.tv_sec - rhs.time_.tv_sec) * kMicroInSec +
+                (time_.tv_nsec - rhs.time_.tv_nsec) * kMicroInNano);
   }
 
   // Returns the system time resolution.
@@ -82,12 +123,37 @@ class Clock {
   static Diff Resolution(Type type) {
     timespec res;
     clock_getres(type, &res);
-    return res.tv_sec * kMicroInSec + res.tv_nsec * kMicroInNano;
+    return Diff(res.tv_sec * kMicroInSec + res.tv_nsec * kMicroInNano);
+  }
+
+  // Returns the string representation of the given time difference.
+  static std::string DiffStr(const Diff& diff) {
+    std::stringstream ss;
+    ss.setf(std::ios::fixed, std::ios::floatfield);
+    ss.precision(2);
+    if (diff.value() >= kMicroInMin) {
+      const double min = diff.value() * kMinInMicro;
+      ss << min << "min";
+    } else if (diff.value() >= kMicroInSec) {
+      const double sec = diff.value() * kSecInMicro;
+      ss << sec << "s";
+    } else if (diff.value() >= kMicroInMilli) {
+      const double milli = diff.value() * kMilliInMicro;
+      ss << milli << "ms";
+    } else {
+      ss << diff.value() << "µs";
+    }
+    return ss.str();
   }
 
  private:
   Type type_;
   timespec time_;
 };
+
+// Stream output operator overload for Diff.
+inline std::ostream& operator<<(std::ostream& stream, const Clock::Diff& diff) {
+  return stream << diff.Str();
+}
 
 #endif  // EXERCISE_SHEET_05_CLOCK_H_

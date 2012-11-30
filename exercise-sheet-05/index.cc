@@ -279,15 +279,15 @@ vector<string> Index::ApproximateMatches(const std::string& query,
   // Assemble and filter the resulting keyword strings.
   vector<string> keywords;
   keywords.reserve(keyword_ids.size());
-  const size_t query_size = query.size();
+  const int query_size = query.size();
   const int max_ed_n = max_ed * ngram_n_;
   size_t num_ed_calls = 0u;
   const Clock beg;
   for (size_t i = 0, num_keywords = keyword_ids.size(); i < num_keywords; ++i) {
     const string& keyword = KeywordById(keyword_ids[i]);
     // TODO(esawin): How to handle queries with wildcards?
-    if (keyword_freqs[i] >=
-         static_cast<int>(std::max(keyword.size(), query_size)) - max_ed_n) {
+    if (keyword_freqs[i] >= std::max(static_cast<int>(keyword.size()),
+                                     query_size) - max_ed_n) {
       ++num_ed_calls;
       if (EditDistance(keyword, query) <= max_ed) {
         keywords.push_back(keyword);

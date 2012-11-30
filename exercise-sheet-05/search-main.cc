@@ -179,7 +179,7 @@ int main(int argc, char** argv) {
   auto diff = end - start;
   cout << "Number of records: " << index.NumRecords()
        << "\nNumber of items: " << index.NumItems()
-       << "\nIndex construction time: " << Clock::DiffStr(diff)
+       << "\nIndex construction time: " << diff
        << "\nShow top " << max_num_records << " results"
        << "\nN-gram value: " << ngram_n
        << "\nBM25 parameters: b = " << bm25_b << ", k = " << bm25_k
@@ -205,11 +205,11 @@ int main(int argc, char** argv) {
     if (results.size() == 0) {
       // No records found.
       cout << kBoldText << "\nNothing found in "
-           << Clock::DiffStr(duration) << "\n" << kResetMode;
+           << duration << "\n" << kResetMode;
     } else {
       cout << "Found " << records_found << " record"
            << (records_found > 1 ? "s" : "") << " in "
-           << Clock::DiffStr(duration) << "\n";
+           << duration << "\n";
     }
 
     size_t num_records = 0;
