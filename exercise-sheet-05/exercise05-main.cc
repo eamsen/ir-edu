@@ -133,9 +133,9 @@ int main(int argc, char** argv) {
   cout << "Avg number of matches: "
        << kBoldText << num_matches / num_queries << kResetMode
        << "\nAvg query time: "
-       << kBoldText << (query_time / num_queries) << kResetMode
+       << kBoldText << query_time / num_queries << kResetMode
        << "\nAvg edit distance time: "
-       << kBoldText << (ed_time / num_queries) << kResetMode
+       << kBoldText << ed_time / num_queries << kResetMode
        << endl;
   return 0;
 }
