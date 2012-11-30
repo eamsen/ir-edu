@@ -288,7 +288,7 @@ vector<string> Index::ApproximateMatches(const std::string& query,
       }
     }
   }
-  last_ed_avg_duration_ = (Clock() - beg) / num_ed_calls;
+  last_ed_avg_duration_ = num_ed_calls ? (Clock() - beg) / num_ed_calls : 0u;
   return keywords;
 }
 
