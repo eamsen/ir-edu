@@ -102,13 +102,13 @@ class Clock {
   static constexpr double kMinInMicro = 1.0 / kMicroInMin;
 
   // Initialised the clock with its default type and the current clock time.
-  explicit Clock() : type_(kDefType) {
-    clock_gettime(type_, &time_);
+  explicit Clock() {
+    clock_gettime(kDefType, &time_);
   }
 
   // Initialised the clock with given type and the current clock time.
-  explicit Clock(Type type) : type_(type) {
-    clock_gettime(type_, &time_);
+  explicit Clock(Type type) {
+    clock_gettime(type, &time_);
   }
 
   // Returns the time difference in microseconds between this and the given
@@ -128,7 +128,6 @@ class Clock {
   }
 
  private:
-  Type type_;
   timespec time_;
 };
 
