@@ -72,6 +72,7 @@ class Clock {
       return ss.str();
     }
 
+    // Returns the integral value of the diff (microseconds).
     const ValueType& value() const {
       return value_;
     }
