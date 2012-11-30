@@ -55,7 +55,7 @@ string ReadFile(const string& path) {
 // function over given number of iterations.
 template<typename Func>
 Clock::Diff AvgDuration(Func func, const size_t num_iter) {
-  const auto beg = Clock();
+  const Clock beg;
   for (size_t i = 0; i < num_iter; ++i) {
     func();
   }
@@ -65,7 +65,7 @@ Clock::Diff AvgDuration(Func func, const size_t num_iter) {
 // Returns the duration in microseconds for the execution of given function.
 template<typename Func>
 Clock::Diff Duration(Func func) {
-  const auto beg = Clock();
+  const Clock beg;
   func();
   return Clock() - beg;
 }
