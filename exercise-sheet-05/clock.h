@@ -126,26 +126,6 @@ class Clock {
     return Diff(res.tv_sec * kMicroInSec + res.tv_nsec * kMicroInNano);
   }
 
-  // Returns the string representation of the given time difference.
-  static std::string DiffStr(const Diff& diff) {
-    std::stringstream ss;
-    ss.setf(std::ios::fixed, std::ios::floatfield);
-    ss.precision(2);
-    if (diff.value() >= kMicroInMin) {
-      const double min = diff.value() * kMinInMicro;
-      ss << min << "min";
-    } else if (diff.value() >= kMicroInSec) {
-      const double sec = diff.value() * kSecInMicro;
-      ss << sec << "s";
-    } else if (diff.value() >= kMicroInMilli) {
-      const double milli = diff.value() * kMilliInMicro;
-      ss << milli << "ms";
-    } else {
-      ss << diff.value() << "µs";
-    }
-    return ss.str();
-  }
-
  private:
   Type type_;
   timespec time_;
