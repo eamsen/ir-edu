@@ -257,7 +257,7 @@ Index::Index()
     : num_items_(0u),
       total_size_(0u),
       ngram_n_(0),
-      last_ed_avg_duration_(0u) {}
+      last_ed_avg_duration_(0) {}
 
 vector<string> Index::ApproximateMatches(const std::string& query,
                                          const int max_ed) const {
@@ -294,7 +294,7 @@ vector<string> Index::ApproximateMatches(const std::string& query,
       }
     }
   }
-  last_ed_avg_duration_ = num_ed_calls ? (Clock() - beg) / num_ed_calls : 0u;
+  last_ed_avg_duration_ = num_ed_calls ? (Clock() - beg) / num_ed_calls : 0;
   return keywords;
 }
 
