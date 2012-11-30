@@ -83,6 +83,11 @@ class Index {
   static std::vector<std::string> NGrams(const std::string& word,
                                          const int ngram_n);
 
+  // Creates all n-grams for given words and n value. The word parts are
+  // meant to be parts of a query separated at wildcards in conserved order.
+  static std::vector<std::string> NGrams(const std::vector<std::string>& words,
+                                         const int ngram_n);
+
   // Returns the edit distance between the given words.
   static int EditDistance(const std::string& word1, const std::string& word2);
 

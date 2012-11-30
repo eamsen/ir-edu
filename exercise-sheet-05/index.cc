@@ -151,6 +151,32 @@ vector<string> Index::NGrams(const string& word, const int ngram_n) {
   return ngrams;
 }
 
+vector<string> Index::NGrams(const vector<string>& words, const int ngram_n) {
+  vector<string> ngrams;
+  for (auto beg = words.cbegin(), it = beg, end = words.cend();
+       it != end; ++it) {
+    vector<string> tmp_ngrams = NGrams(*it, ngram_n);
+    if (tmp_ngrams.size() == 0) {
+      continue;
+    }
+    auto tmp_beg = tmp_ngrams.begin();
+    auto tmp_end = tmp_ngrams.end();
+    if (it != beg) {
+      // We are not at the beginning, the first n-gram is not valid.
+      ++tmp_beg;
+    }
+    if (it != end - 1) {
+      // We are not at the end, the last n-gram is not valid.
+      --tmp_end;
+    }
+    if (tmp_beg < tmp_end) {
+      // We still have n-grams left, remember them.
+      ngrams.insert(ngrams.end(), tmp_beg, tmp_end);
+    }
+  }
+  return ngrams;
+}
+
 int Index::EditDistance(const string& word1, const string& word2) {
   auto Dist = [](int r, int d, int i, bool eq) {
     return std::min(std::min(d, i) + 1, r + !eq);
@@ -238,27 +264,7 @@ vector<string> Index::ApproximateMatches(const std::string& query,
   assert(ngram_n_ > 1);
   // Generate the n-grams for the given query.
   vector<string> query_parts = Split(query, "*");
-  vector<string> ngrams;
-  for (size_t i = 0, num_parts = query_parts.size(); i < num_parts; ++i) {
-    vector<string> tmp_ngrams = NGrams(query_parts[i], ngram_n_);
-    if (tmp_ngrams.size() == 0) {
-      continue;
-    }
-    auto beg = tmp_ngrams.begin();
-    auto end = tmp_ngrams.end();
-    if (i > 0) {
-      // We are not at the beginning, the first n-gram is not valid.
-      ++beg;
-    }
-    if (i < num_parts - 1) {
-      // We are not at the end, the last n-gram is not valid.
-      --end;
-    }
-    if (beg < end) {
-      // We still have n-grams left, remember them.
-      ngrams.insert(ngrams.end(), beg, end);
-    }
-  }
+  vector<string> ngrams = NGrams(query_parts, ngram_n_);
   // Assemble the inverted lists for the n-grams.
   vector<const vector<int>*> lists;
   lists.reserve(ngrams.size());

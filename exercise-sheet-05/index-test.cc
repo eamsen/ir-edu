@@ -136,18 +136,12 @@ TEST_F(IndexTest, GoogleItems) {
 }
 
 TEST_F(IndexTest, NGrams) {
-  EXPECT_EQ(vector<string>({}),
-            Index::NGrams("", 2));
-  EXPECT_EQ(vector<string>({}),
-            Index::NGrams("", 3));
-  EXPECT_EQ(vector<string>({}),
-            Index::NGrams("h", 3));
-  EXPECT_EQ(vector<string>({"#h", "h#"}),
-            Index::NGrams("h", 2));
-  EXPECT_EQ(vector<string>({"#ha", "ha#"}),
-            Index::NGrams("ha", 3));
-  EXPECT_EQ(vector<string>({"#ha", "hal", "al#"}),
-            Index::NGrams("hal", 3));
+  EXPECT_EQ(vector<string>({}), Index::NGrams("", 2));
+  EXPECT_EQ(vector<string>({}), Index::NGrams("", 3));
+  EXPECT_EQ(vector<string>({}), Index::NGrams("h", 3));
+  EXPECT_EQ(vector<string>({"#h", "h#"}), Index::NGrams("h", 2));
+  EXPECT_EQ(vector<string>({"#ha", "ha#"}), Index::NGrams("ha", 3));
+  EXPECT_EQ(vector<string>({"#ha", "hal", "al#"}), Index::NGrams("hal", 3));
   EXPECT_EQ(vector<string>({"#ha", "hal", "all", "llo", "lo#"}),
             Index::NGrams("hallo", 3));
   EXPECT_EQ(vector<string>({"#hal", "hall", "allo", "llo#"}),
@@ -181,6 +175,37 @@ TEST_F(IndexTest, NGrams) {
             Index::NGrams("informatik", 11));
   EXPECT_EQ(vector<string>({}),
             Index::NGrams("informatik", 12));
+}
+
+TEST_F(IndexTest, NGrams_words) {
+  EXPECT_EQ(vector<string>({}), Index::NGrams(vector<string>({}), 3));
+  EXPECT_EQ(vector<string>({}), Index::NGrams(vector<string>({""}), 3));
+  EXPECT_EQ(vector<string>({}), Index::NGrams(vector<string>({"", ""}), 3));
+  EXPECT_EQ(vector<string>({}), Index::NGrams(vector<string>({"", "", ""}), 3));
+  EXPECT_EQ(vector<string>({}), Index::NGrams(vector<string>({"h"}), 3));
+  // Query: h.
+  EXPECT_EQ(vector<string>({"#h", "h#"}),
+            Index::NGrams(vector<string>({"h"}), 2));
+  // Query: ha.
+  EXPECT_EQ(vector<string>({"#h", "ha", "a#"}),
+            Index::NGrams(vector<string>({"ha"}), 2));
+  EXPECT_EQ(vector<string>({"#ha", "ha#"}),
+            Index::NGrams(vector<string>({"ha"}), 3));
+  EXPECT_EQ(vector<string>({"#ha", "lo#"}),
+  // Query: ha*lo.
+            Index::NGrams(vector<string>({"ha", "lo"}), 3));
+  // Query: h*a*l*l*o.
+  EXPECT_EQ(vector<string>({}),
+            Index::NGrams(vector<string>({"h", "a", "l", "l", "o"}), 3));
+  // Query: ha*ll*.
+  EXPECT_EQ(vector<string>({"#ha"}),
+            Index::NGrams(vector<string>({"ha", "ll", ""}), 3));
+  // Query: ha*nuk*.
+  EXPECT_EQ(vector<string>({"#ha", "nuk"}),
+            Index::NGrams(vector<string>({"ha", "nuk", ""}), 3));
+  // Query: in*tik.
+  EXPECT_EQ(vector<string>({"#in", "tik", "ik#"}),
+            Index::NGrams(vector<string>({"in", "tik"}), 3));
 }
 
 TEST_F(IndexTest, EditDistance) {
