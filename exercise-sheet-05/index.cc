@@ -184,19 +184,19 @@ int Index::EditDistance(const string& word1, const string& word2) {
     return std::min(std::min(d, i) + 1, r + !eq);
   };
 
-  const int size1 = word1.size();
-  const int size2 = word2.size();
+  const size_t size1 = word1.size();
+  const size_t size2 = word2.size();
   if (size1 > size2) {
     return EditDistance(word2, word1);
   }
   vector<int> dists(size1 + 1, 0);
-  for (int i = 1; i < size1 + 1; ++i) {
+  for (size_t i = 1; i < size1 + 1; ++i) {
     dists[i] = i;
   }
   vector<int> new_dists(size1 + 1, 0);
-  for (int w2 = 0; w2 < size2; ++w2) {
+  for (size_t w2 = 0; w2 < size2; ++w2) {
     new_dists[0] = dists[0] + 1;
-    for (int d1 = 1; d1 < size1 + 1; ++d1) {
+    for (size_t d1 = 1; d1 < size1 + 1; ++d1) {
       new_dists[d1] = Dist(dists[d1 - 1], dists[d1], new_dists[d1 - 1],
                            word1[d1 - 1] == word2[w2]);
     }
