@@ -196,9 +196,9 @@ int Index::EditDistance(const string& word1, const string& word2) {
   vector<int> new_dists(size1 + 1, 0);
   for (size_t w2 = 0; w2 < size2; ++w2) {
     new_dists[0] = dists[0] + 1;
-    for (size_t d1 = 1; d1 < size1 + 1; ++d1) {
-      new_dists[d1] = Dist(dists[d1 - 1], dists[d1], new_dists[d1 - 1],
-                           word1[d1 - 1] == word2[w2]);
+    for (size_t w1 = 0; w1 < size1; ++w1) {
+      new_dists[w1 + 1] = Dist(dists[w1], dists[w1 + 1], new_dists[w1],
+                               word1[w1] == word2[w2]);
     }
     dists.swap(new_dists);
   }
