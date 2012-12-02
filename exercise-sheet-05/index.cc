@@ -138,16 +138,18 @@ void Index::AddKeywords(const std::string& file_content, Index* index) {
 vector<string> Index::NGrams(const string& word, const int ngram_n) {
   assert(ngram_n > 1);
   const size_t word_size = word.size();
-  const int num_ngrams = word_size - ngram_n + 3;
+  const size_t num_ngrams = word_size - ngram_n + 3;
   if (num_ngrams < 2) {
     return vector<string>();
   }
-  vector<string> ngrams(num_ngrams);
-  ngrams[0] = "#" + word.substr(0, ngram_n - 1);
-  for (int n = 1; n < num_ngrams - 1; ++n) {
-    ngrams[n] = word.substr(n - 1, ngram_n);
+  vector<string> ngrams;
+  ngrams.reserve(num_ngrams);
+  ngrams.push_back("#" + word.substr(0, ngram_n - 1));
+  for (size_t n = 0; n < num_ngrams - 2; ++n) {
+    ngrams.push_back(word.substr(n, ngram_n));
   }
-  ngrams.back() = word.substr(word_size - ngram_n + 1, ngram_n - 1) + "#";
+  ngrams.push_back(word.substr(num_ngrams - 2, ngram_n - 1) + "#");
+  assert(ngrams.size() == num_ngrams);
   return ngrams;
 }
 
