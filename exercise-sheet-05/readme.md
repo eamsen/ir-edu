@@ -1,9 +1,8 @@
 # Exercise 5 Recap
-The Wiki page is nice to see whether you get correct results compared to others,
-but not suitable for performance comparisons due to the different systems used
-for the evaluation.
+The Wiki page is nice to see whether you get correct results, but not suitable
+for performance comparisons due to the different systems used for the evaluation.
 
-Therefore I have compiled a quick overview over the performance of your submitted
+Therefore, I have compiled a quick overview over the performance of your submitted
 applications on my own system. Note that not all student's results are included,
 only those which returned correct results without major modifications from my
 side.
