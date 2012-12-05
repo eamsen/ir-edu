@@ -7,6 +7,10 @@ applications on my own system. Note that not all student's results are included,
 only those which returned correct results without major modifications from my
 side.
 
+The best performing system at each category is highlighted, *es* is excluded from
+this due to his "cheating" by ignore by ignoring single-letter words and adding
+only one padding character at each side instead of k-1.
+
 ## Performance Results
 
 ### System Specs
