@@ -16,7 +16,7 @@ side.
 * GCC 4.6.3
 
 ### Parsing
-* **ab*: 591ms**
+* ***ab*: 591ms**
 * *ah*: 1235ms
 * *as*: 613ms
 * *cg*: 620ms
