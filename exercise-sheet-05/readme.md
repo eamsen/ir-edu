@@ -9,7 +9,8 @@ side.
 
 The best performing system at each category is highlighted. *es* is excluded from
 this due to his "cheating" by ignoring single-letter words and adding only one
-padding character at each side instead of k-1.
+padding character at each side instead of k-1; you can find his solution in this
+repository.
 
 ## Performance Results
 
