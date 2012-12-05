@@ -20,7 +20,7 @@ repository.
 * OS: Ubuntu 12.04 LTS 32bit. 
 * GCC 4.6.3
 
-### Parsing
+### Parsing Time
 * ***ab*: 591ms**
 * *ah*: 1235ms
 * *as*: 613ms
@@ -33,7 +33,7 @@ repository.
 * *mb*: 1446ms
 * *mf205*: 1700ms
 
-### Average Query Durations
+### Average Query Time
 * *ab*: 5.68ms
 * *ah*: 20.82ms
 * ***as*: 5.27ms**
@@ -45,7 +45,7 @@ repository.
 * *mf205*: 5.28ms
 * *mf228*: 6.00ms 
 
-### Average Edit Distance Durations
+### Average Edit Distance Time
 * *ab*: 3.79µs 
 * *ah*: 3.00µs
 * *as*: 3.10µs
