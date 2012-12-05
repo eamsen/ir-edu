@@ -16,7 +16,7 @@ side.
 * GCC 4.6.3
 
 ### Parsing
-* ** *ab*: 591ms **
+* **ab*: 591ms**
 * *ah*: 1235ms
 * *as*: 613ms
 * *cg*: 620ms
@@ -31,7 +31,7 @@ side.
 ### Average Query Durations
 * *ab*: 5.68ms
 * *ah*: 20.82ms
-* ** *as*: 5.27ms **
+* ***as*: 5.27ms**
 * *cg*: 7.11ms
 * *dp-mg*: 44.00ms
 * *es*: 1.42ms
@@ -46,7 +46,7 @@ side.
 * *as*: 3.10µs
 * *cg*: 3.29µs
 * *es*: 1.00µs
-* ** *fw*: 1.43µs **
+* ***fw*: 1.43µs**
 * *jm*: 1.69µs
 * *mf205*: 2.13µs
 * *mf228*: 4.31µs
