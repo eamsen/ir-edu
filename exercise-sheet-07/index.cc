@@ -27,7 +27,8 @@ int Index::RepairUtf8(string* s) {
 
   // Returns the last valid position starting at given position. If the
   // character encoding starting at the given position is not valid, the given
-  // start position is returned.
+  // start position is returned. Also, it repairs byte sequences, which can
+  // be reduced to a single byte character.
   auto LastValid = [&s, end, &num_repaired](uint8_t* b) -> uint8_t* {
     static const vector<uint8_t> _len_map =
       {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 3, 4};
