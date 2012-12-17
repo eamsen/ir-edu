@@ -173,7 +173,6 @@ int main(int argc, char** argv) {
   auto start = Clock();
   string file_content = ReadFile(filename);
   const int num_repaired = Index::RepairUtf8(&file_content);
-  auto repair_end = Clock();
   Index::AddRecordsFromCsv(file_content, &index);
   index.ComputeScores(bm25_b, bm25_k);
   index.BuildNGrams(ngram_n);

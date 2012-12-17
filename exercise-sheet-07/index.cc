@@ -14,59 +14,60 @@ using std::unordered_map;
 using std::string;
 using std::vector;
 
-const size_t Index::kMinKeywordSize = 2;
 const int Index::kInvalidId = -1;
 const char* Index::kWhitespace = "\n\r\t ";
 
+size_t Index::kMinKeywordSize = 2;
+uint8_t Index::kUtf8RepairReplace = 32;
+
 int Index::RepairUtf8(string* s) {
   const size_t size = s->size();
+  const uint8_t* end = reinterpret_cast<uint8_t*>(&(*s)[size]);
   int num_repaired = 0;
 
   // Returns the last valid position starting at given position. If the
   // character encoding starting at the given position is not valid, the given
   // start position is returned.
-  auto LastValid = [&s, &size, &num_repaired](const size_t& beg) -> size_t {
+  auto LastValid = [&s, end, &num_repaired](uint8_t* b) -> uint8_t* {
     static const vector<uint8_t> _len_map =
       {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 3, 4};
-    size_t pos = beg;
-    uint8_t* c = reinterpret_cast<uint8_t*>(&(*s)[pos]);
+    uint8_t* c = b;
     uint8_t seq_len = _len_map[*c >> 4];
-    if (seq_len > 1 && pos + seq_len - 1 < size) {
+    if (seq_len > 1 && c + seq_len - 1 < end) {
       if (seq_len == 2 && (*c & 31u) < 2) {
         // Wasted byte, move the last bit to the next byte.
-        uint8_t* c_next = reinterpret_cast<uint8_t*>(&(*s)[++pos]);
-        *c_next = (*c_next | ((*c & 1u) << 6)) & 127u;
-        *c = 32;  // Replace with empty space.
+        uint8_t* c_prev = c++;
+        *c = (*c | ((*c_prev & 1u) << 6)) & 127u;
+        *c_prev = kUtf8RepairReplace;
         --seq_len;
         num_repaired += 2;
       }
       while (--seq_len) {
-        c = reinterpret_cast<uint8_t*>(&(*s)[++pos]);
+        ++c;
         if (*c < 128 || *c > 191) {
           // Most significant bits are not 10.
           break;
         }
       }
     }
-    return seq_len ? beg : pos;
+    return seq_len ? b : c;
   };
 
-  size_t pos = 0;
-  while (pos < size) {
-    uint8_t& c = reinterpret_cast<uint8_t&>((*s)[pos]);
-    if (c < 128) {
+  uint8_t* c = reinterpret_cast<uint8_t*>(&(*s)[0]);
+  while (c < end) {
+    if (*c < 128) {
       // ASCII, move on.
-      ++pos;
+      ++c;
       continue;
     }
-    size_t last_valid = LastValid(pos);
-    if (last_valid == pos) {
+    uint8_t* last_valid = LastValid(c);
+    if (last_valid == c) {
       // Invalid sequence begin.
-      c = 32;  // Replace with empty space.
+      *c = kUtf8RepairReplace;
       ++num_repaired;
     }
-    assert(last_valid - pos < 4);
-    pos = last_valid + 1;
+    assert(last_valid - c < 4);
+    c = last_valid + 1;
   }
   return num_repaired;
 }

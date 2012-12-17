@@ -51,14 +51,17 @@ class Index {
     std::vector<Item> items;
   };
 
-  // The minimum size for a valid keyword.
-  static const size_t kMinKeywordSize;
-
   // Invalid index value, used for record ids.
   static const int kInvalidId;
 
   // All whitespace characters, useful as default delimeter for splitting.
   static const char* kWhitespace;
+
+  // The minimum size for a valid keyword.
+  static size_t kMinKeywordSize;
+
+  // Replacement character for invalid UTF-8 bytes.
+  static uint8_t kUtf8RepairReplace;
 
   // Repairs invalid byte sequences in given string, making it valid UTF8.
   // Returns the number of bytes repaired.
