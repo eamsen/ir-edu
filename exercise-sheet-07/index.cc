@@ -94,12 +94,12 @@ auto Index::ExtractKeywords(const string& content, const size_t beg,
   using std::isalnum;
 
   // Keyword density approximation.
-  static float density = 1.0f / kMinKeywordSize;
+  static float _density = 1.0f / kMinKeywordSize;
 
   const size_t content_size = content.size();
   assert(beg < end && end <= content_size);
   vector<PosSize> keywords;
-  keywords.reserve(content_size * density * 1.5f);
+  keywords.reserve(content_size * _density * 1.5f);
   size_t pos = beg;
   while (pos < end) {
     // Found beginning of the next keyword (any alphanumeric character).
@@ -122,7 +122,7 @@ auto Index::ExtractKeywords(const string& content, const size_t beg,
     ++pos;
   }
   // Update density approximation.
-  density = (density * 3.0f +
+  _density = (_density * 3.0f +
              keywords.size() / static_cast<float>(content_size))
             * 0.25f;
   return keywords;
@@ -397,10 +397,10 @@ Index::Record& Index::recordById(const int record_id) {
 }
 
 auto Index::Items(const string& keyword) const -> const vector<Item>& {
-  static vector<Item> kEmptyList;
+  static const vector<Item> _kEmptyList;
   const int id = KeywordId(keyword);
   if (id == kInvalidId) {
-    return kEmptyList;
+    return _kEmptyList;
   }
   return KeywordById(id).items;
 }
@@ -457,7 +457,7 @@ void Index::AddNGram(const int keyword_id, const string& ngram) {
 }
 
 const vector<int>& Index::NGramItems(const string& ngram) const {
-  static vector<int> _empty;
+  static const vector<int> _empty;
 
   auto it = ngram_index_.find(ngram);
   if (it == ngram_index_.end()) {
