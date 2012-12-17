@@ -344,3 +344,33 @@ TEST_F(IndexTest, Union) {
   EXPECT_EQ(StlUnion({v4, v1, v6, v9, v7, v8, v9}),
             Index::Union({&v4, &v1, &v6, &v9, &v7, &v8, &v9}));
 }
+
+TEST_F(IndexTest, RepairUtf8) {
+  {
+    string s = "Everything fine.";
+    EXPECT_EQ(0, Index::RepairUtf8(&s));
+  }
+  {
+    string s = "";
+    EXPECT_EQ(0, Index::RepairUtf8(&s));
+  }
+  {
+    string s = "!";
+    EXPECT_EQ(0, Index::RepairUtf8(&s));
+  }
+  {
+    string s = "Älleß in Ördüng €.";
+    EXPECT_EQ(0, Index::RepairUtf8(&s));
+  }
+  {
+    string s = "Все хорошо!";
+    EXPECT_EQ(0, Index::RepairUtf8(&s));
+    EXPECT_EQ("Все хорошо!", s);
+  }
+  {
+    // Uhm, guys, anyone knows a nice way to input invalid UTF-8 sequences?
+    string s = "Alain ConneÁ³";
+    EXPECT_EQ(2, Index::RepairUtf8(&s));
+    EXPECT_EQ("Alain Conne ", s);
+  }
+}

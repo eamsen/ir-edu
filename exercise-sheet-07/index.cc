@@ -20,16 +20,28 @@ const char* Index::kWhitespace = "\n\r\t ";
 
 int Index::RepairUtf8(string* s) {
   const size_t size = s->size();
+  int num_repaired = 0;
 
-  auto Next = [&s, &size](const size_t& beg) -> size_t {
-    static vector<uint8_t> _len_map = {1, 0, 0, 0, 2, 0, 3, 4};
+  // Returns the last valid position starting at given position. If the
+  // character encoding starting at the given position is not valid, the given
+  // start position is returned.
+  auto LastValid = [&s, &size, &num_repaired](const size_t& beg) -> size_t {
+    static const vector<uint8_t> _len_map =
+      {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 3, 4};
     size_t pos = beg;
     uint8_t* c = reinterpret_cast<uint8_t*>(&(*s)[pos]);
-    uint8_t seq_len = _len_map[(*c >> 4) - 8];
-    assert(seq_len < 5);
-    if (seq_len > 0) {
-      while (++pos < size && --seq_len) {
-        c = reinterpret_cast<uint8_t*>(&(*s)[pos]);
+    uint8_t seq_len = _len_map[*c >> 4];
+    if (seq_len > 1 && pos + seq_len - 1 < size) {
+      if (seq_len == 2 && (*c & 31u) < 2) {
+        // Wasted byte, move the last bit to the next byte.
+        uint8_t* c_next = reinterpret_cast<uint8_t*>(&(*s)[++pos]);
+        *c_next = (*c_next | ((*c & 1u) << 6)) & 127u;
+        *c = 32;  // Replace with empty space.
+        --seq_len;
+        num_repaired += 2;
+      }
+      while (--seq_len) {
+        c = reinterpret_cast<uint8_t*>(&(*s)[++pos]);
         if (*c < 128 || *c > 191) {
           // Most significant bits are not 10.
           break;
@@ -39,7 +51,6 @@ int Index::RepairUtf8(string* s) {
     return seq_len ? beg : pos;
   };
 
-  int num_repaired = 0;
   size_t pos = 0;
   while (pos < size) {
     uint8_t& c = reinterpret_cast<uint8_t&>((*s)[pos]);
@@ -48,15 +59,14 @@ int Index::RepairUtf8(string* s) {
       ++pos;
       continue;
     }
-    size_t next = Next(pos);
-    if (next == pos) {
+    size_t last_valid = LastValid(pos);
+    if (last_valid == pos) {
       // Invalid sequence begin.
       c = 32;  // Replace with empty space.
       ++num_repaired;
-      ++next;
     }
-    assert(next - pos < 5);
-    pos = next;
+    assert(last_valid - pos < 4);
+    pos = last_valid + 1;
   }
   return num_repaired;
 }
