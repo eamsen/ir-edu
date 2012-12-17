@@ -368,9 +368,41 @@ TEST_F(IndexTest, RepairUtf8) {
     EXPECT_EQ("Все хорошо!", s);
   }
   {
-    // Uhm, guys, anyone knows a nice way to input invalid UTF-8 sequences?
-    string s = "Alain ConneÁ³";
+    string s("Alain Conne");
+    s += 193u;
+    s += 179u;
     EXPECT_EQ(2, Index::RepairUtf8(&s));
-    EXPECT_EQ("Alain Conne ", s);
+    EXPECT_EQ("Alain Conne_s", s);
+  }
+  {
+    string s("a");
+    s += 193u;
+    s += 180u;
+    EXPECT_EQ(2, Index::RepairUtf8(&s));
+    EXPECT_EQ("a_t", s);
+  }
+  {
+    string s;
+    s += 215u;
+    s += "ork";
+    EXPECT_EQ(1, Index::RepairUtf8(&s));
+    EXPECT_EQ("_ork", s);
+  }
+  {
+    string s("fr");
+    s += 239u;
+    s += "m";
+    EXPECT_EQ(1, Index::RepairUtf8(&s));
+    EXPECT_EQ("fr_m", s);
+  }
+  {
+    // Lecture example.
+    string s;
+    s += 0b11000001;
+    s += 0b10101010;
+    EXPECT_EQ(2, Index::RepairUtf8(&s));
+    string r("_");
+    r += 0b01101010;
+    EXPECT_EQ(r, s);
   }
 }

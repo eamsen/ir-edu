@@ -18,7 +18,7 @@ const int Index::kInvalidId = -1;
 const char* Index::kWhitespace = "\n\r\t ";
 
 size_t Index::kMinKeywordSize = 2;
-uint8_t Index::kUtf8RepairReplace = 32;
+uint8_t Index::kUtf8RepairReplace = '_';
 
 int Index::RepairUtf8(string* s) {
   const size_t size = s->size();
