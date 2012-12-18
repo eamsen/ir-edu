@@ -45,7 +45,7 @@ int Index::RepairUtf8(string* s) {
       } else if ((*c << seq_len) == 0 && (*(c + 1) >> (6 - seq_len)) % 2) {
         // Wasted byte, move sequence start to the next byte.
         *c++ = kUtf8RepairReplace;
-        *c = (((seq_len / 2u) * 2u  + 10u) << 4) | *c;
+        *c = (((seq_len & 6u) + 10u) << 4) | *c;
         seq_len = 1;
         num_repaired += 2;
       }
