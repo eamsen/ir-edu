@@ -35,7 +35,7 @@ int Index::RepairUtf8(string* s) {
     uint8_t* c = b;
     uint8_t seq_len = _len_map[*c >> 4];
     if (seq_len > 1 && c + seq_len - 1 < end) {
-      if (seq_len == 2 && (*c & 31u) < 2) {
+      if (seq_len == 2 && (*c & 30u) == 0) {
         // Wasted byte, move the last bit to the next byte.
         uint8_t* c_prev = c++;
         *c = (*c | ((*c_prev & 1u) << 6)) & 127u;
