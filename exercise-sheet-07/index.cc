@@ -40,7 +40,13 @@ int Index::RepairUtf8(string* s) {
         uint8_t* c_prev = c++;
         *c = (*c | ((*c_prev & 1u) << 6)) & 127u;
         *c_prev = kUtf8RepairReplace;
-        --seq_len;
+        seq_len = 1;
+        num_repaired += 2;
+      } else if ((*c << seq_len) == 0 && (*(c + 1) >> (6 - seq_len)) % 2) {
+        // Wasted byte, move sequence start to the next byte.
+        *c++ = kUtf8RepairReplace;
+        *c = (((seq_len / 2u) * 2u  + 10u) << 4) | *c;
+        seq_len = 1;
         num_repaired += 2;
       }
       while (--seq_len) {
