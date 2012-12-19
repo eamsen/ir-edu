@@ -28,10 +28,10 @@ int Index::RepairUtf8(string* s) {
   // character encoding starting at the given byte is not valid, the given
   // start pointer is returned. Also, it reduces byte sequences, which do not
   // use the minumum sequence to encode a character.
-  auto LastValid = [end, &num_repaired](uint8_t* b) -> uint8_t* {
+  auto LastValid = [end, &num_repaired](uint8_t* beg) -> uint8_t* {
     static const vector<uint8_t> _len_map =
       {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 3, 4};
-    uint8_t* c = b;
+    uint8_t* c = beg;
     // Number of leading 1s encode the sequence length.
     uint8_t seq_len = _len_map[*c >> 4];
     if (seq_len > 1 && c + seq_len - 1 < end) {
@@ -58,7 +58,7 @@ int Index::RepairUtf8(string* s) {
         }
       }
     }
-    return seq_len ? b : c;
+    return seq_len ? beg : c;
   };
 
   uint8_t* c = reinterpret_cast<uint8_t*>(&(*s)[0]);
