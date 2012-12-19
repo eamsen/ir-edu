@@ -28,6 +28,7 @@ int Index::RepairUtf8(string* s) {
   // character encoding starting at the given byte is not valid, the given
   // start pointer is returned. Also, it reduces byte sequences, which do not
   // use the minumum sequence to encode a character.
+  // Sorry for this part, I'm still recovering from the Hackolaus.
   auto LastValid = [end, &num_repaired](uint8_t* beg) -> uint8_t* {
     static const vector<uint8_t> _len_map =
       {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 3, 4};
