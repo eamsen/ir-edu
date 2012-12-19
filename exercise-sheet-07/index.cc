@@ -21,15 +21,14 @@ size_t Index::kMinKeywordSize = 2;
 uint8_t Index::kUtf8RepairReplace = '_';
 
 int Index::RepairUtf8(string* s) {
-  const size_t size = s->size();
-  const uint8_t* end = reinterpret_cast<uint8_t*>(&(*s)[size]);
+  const uint8_t* end = reinterpret_cast<uint8_t*>(&(*s)[s->size()]);
   int num_repaired = 0;
 
   // Returns the pointer to the last valid byte starting at given byte. If the
   // character encoding starting at the given byte is not valid, the given
   // start pointer is returned. Also, it reduces byte sequences, which do not
   // use the minumum sequence to encode a character.
-  auto LastValid = [&s, end, &num_repaired](uint8_t* b) -> uint8_t* {
+  auto LastValid = [end, &num_repaired](uint8_t* b) -> uint8_t* {
     static const vector<uint8_t> _len_map =
       {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 3, 4};
     uint8_t* c = b;
