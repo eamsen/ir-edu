@@ -33,7 +33,7 @@ int Index::RepairUtf8(string* s) {
     static const vector<uint8_t> _len_map =
       {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 3, 4};
     uint8_t* c = b;
-    // Number of leading 1s encodes the sequence length.
+    // Number of leading 1s encode the sequence length.
     uint8_t seq_len = _len_map[*c >> 4];
     if (seq_len > 1 && c + seq_len - 1 < end) {
       // Byte sequence start with enough bytes left in the string to encode it.
@@ -44,7 +44,7 @@ int Index::RepairUtf8(string* s) {
         *c_prev = kUtf8RepairReplace;
         seq_len = 1;
         num_repaired += 2;
-      } else if ((*c << seq_len) == 0 && (*(c + 1) >> (6 - seq_len)) % 2) {
+      } else if ((*c << seq_len) == 0 && (*(c + 1) >> (6 - seq_len)) & 1u) {
         // Wasted byte, move sequence start to the next byte.
         *c++ = kUtf8RepairReplace;
         *c = (((seq_len & 6u) + 10u) << 4) | *c;
