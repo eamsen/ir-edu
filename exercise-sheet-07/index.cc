@@ -25,16 +25,18 @@ int Index::RepairUtf8(string* s) {
   const uint8_t* end = reinterpret_cast<uint8_t*>(&(*s)[size]);
   int num_repaired = 0;
 
-  // Returns the last valid position starting at given position. If the
-  // character encoding starting at the given position is not valid, the given
-  // start position is returned. Also, it repairs byte sequences, which can
-  // be reduced to a single byte character.
+  // Returns the pointer to the last valid byte starting at given byte. If the
+  // character encoding starting at the given byte is not valid, the given
+  // start pointer is returned. Also, it reduces byte sequences, which do not
+  // use the minumum sequence to encode a character.
   auto LastValid = [&s, end, &num_repaired](uint8_t* b) -> uint8_t* {
     static const vector<uint8_t> _len_map =
       {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 3, 4};
     uint8_t* c = b;
+    // Number of leading 1s encodes the sequence length.
     uint8_t seq_len = _len_map[*c >> 4];
     if (seq_len > 1 && c + seq_len - 1 < end) {
+      // Byte sequence start with enough bytes left in the string to encode it.
       if (seq_len == 2 && (*c & 30u) == 0) {
         // Wasted byte, move the last bit to the next byte.
         uint8_t* c_prev = c++;
