@@ -24,42 +24,42 @@ int Index::RepairUtf8(string* s) {
   const uint8_t* end = reinterpret_cast<uint8_t*>(&(*s)[s->size()]);
   int num_repaired = 0;
 
-  // Returns the pointer to the last valid byte starting at given byte. If the
-  // character encoding starting at the given byte is not valid, the given
-  // start pointer is returned. Also, it reduces byte sequences, which do not
-  // use the minumum sequence to encode a character.
-  // Sorry for this part, I'm still recovering from the Hackolaus.
-  auto LastValid = [end, &num_repaired](uint8_t* beg) -> uint8_t* {
+  // Merges overlong sequences. Returns pointer to the next byte to be checked.
+  auto Merge = [end, &num_repaired](uint8_t* seq_beg) -> uint8_t* {
     static const vector<uint8_t> _len_map =
       {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 3, 4};
-    uint8_t* c = beg;
+    uint8_t* c = seq_beg;
     // Number of leading 1s encode the sequence length.
-    uint8_t seq_len = _len_map[*c >> 4];
-    if (seq_len > 1 && c + seq_len - 1 < end) {
-      // Byte sequence start with enough bytes left in the string to encode it.
-      if (seq_len == 2 && (*c & 30u) == 0) {
-        // Wasted byte, move the last bit to the next byte.
-        uint8_t* c_prev = c++;
-        *c = (*c | ((*c_prev & 1u) << 6)) & 127u;
-        *c_prev = kUtf8RepairReplace;
-        seq_len = 1;
-        num_repaired += 2;
-      } else if ((*c << seq_len) == 0 && (*(c + 1) >> (6 - seq_len)) & 1u) {
-        // Wasted byte, move sequence start to the next byte.
-        *c++ = kUtf8RepairReplace;
-        *c = (((seq_len & 6u) + 10u) << 4) | *c;
-        seq_len = 1;
-        num_repaired += 2;
-      }
-      while (--seq_len) {
+    const uint8_t seq_len = _len_map[*c >> 4];
+    const uint8_t* seq_end = c + seq_len;
+    if (seq_len > 1 && seq_end <= end) {
+      // Byte sequence starts with enough bytes left in the string to encode it.
+      uint8_t* next = c + 1;
+      if (seq_len == 2 && (*c & 0b00011110) == 0) {
+        // Overlong sequence, move the last bit to the next byte.
+        *c = kUtf8RepairReplace;
+        *next = (*next | ((*c & 1u) << 6)) & 0b01111111;
+        ++num_repaired;
+        c += 2;
+      } else if (!((*c << seq_len) & 255u) &&
+                 !((128u >> (seq_len - 1)) & *next)) {
+        // Overlong sequence, move sequence start to the next byte.
+        *c = kUtf8RepairReplace;
+        *next = (((seq_len & 0b0110) + 10u) << 4) | *next;
+        ++num_repaired;
         ++c;
-        if (*c < 128 || *c > 191) {
-          // Most significant bits are not 10.
-          break;
+      } else {
+        // Check if sequence is well formed.
+        while (++c < seq_end) {
+          if ((*c & 0b11000000) != 0b10000000) {
+            // Most significant bits are not 10, invalid sequence.
+            c = seq_beg;
+            break;
+          }
         }
       }
     }
-    return seq_len ? beg : c;
+    return c;
   };
 
   uint8_t* c = reinterpret_cast<uint8_t*>(&(*s)[0]);
@@ -69,14 +69,15 @@ int Index::RepairUtf8(string* s) {
       ++c;
       continue;
     }
-    uint8_t* last_valid = LastValid(c);
-    if (last_valid == c) {
+    uint8_t* next = Merge(c);
+    if (next == c) {
       // Invalid sequence begin.
       *c = kUtf8RepairReplace;
       ++num_repaired;
+      ++next;
     }
-    assert(last_valid - c < 4);
-    c = last_valid + 1;
+    assert(next - c < 4);
+    c = next;
   }
   return num_repaired;
 }

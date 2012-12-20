@@ -371,14 +371,14 @@ TEST_F(IndexTest, RepairUtf8) {
     string s("Alain Conne");
     s += 193u;
     s += 179u;
-    EXPECT_EQ(2, Index::RepairUtf8(&s));
+    EXPECT_EQ(1, Index::RepairUtf8(&s));
     EXPECT_EQ("Alain Conne_s", s);
   }
   {
     string s("a");
     s += 193u;
     s += 180u;
-    EXPECT_EQ(2, Index::RepairUtf8(&s));
+    EXPECT_EQ(1, Index::RepairUtf8(&s));
     EXPECT_EQ("a_t", s);
   }
   {
@@ -400,9 +400,71 @@ TEST_F(IndexTest, RepairUtf8) {
     string s;
     s += 0b11000001;
     s += 0b10101010;
-    EXPECT_EQ(2, Index::RepairUtf8(&s));
+    EXPECT_EQ(1, Index::RepairUtf8(&s));
     string r("_");
     r += 0b01101010;
+    EXPECT_EQ(r, s);
+  }
+  {
+    // 3-byte sequence, can be reduced to 2
+    string s;
+    s += 0b11100000;
+    s += 0b10010000;
+    s += 0b10000000;
+    EXPECT_EQ(1, Index::RepairUtf8(&s));
+    string r("_");
+    r += 0b11010000;
+    r += 0b10000000;
+    EXPECT_EQ(r, s);
+  }
+  {
+    // 3-byte sequence, can be reduced to 1
+    string s;
+    s += 0b11100000;
+    s += 0b10000001;
+    s += 0b10100000;
+    EXPECT_EQ(2, Index::RepairUtf8(&s));
+    string r("__");
+    r += 0b01100000;
+    EXPECT_EQ(r, s);
+  }
+  {
+    // 4-byte sequence, can be reduced to 3
+    string s;
+    s += 0b11110000;
+    s += 0b10001000;
+    s += 0b10010000;
+    s += 0b10100000;
+    EXPECT_EQ(1, Index::RepairUtf8(&s));
+    string r("_");
+    r += 0b11101000;
+    r += 0b10010000;
+    r += 0b10100000;
+    EXPECT_EQ(r, s);
+  }
+  {
+    // 4-byte sequence, can be reduced to 2
+    string s;
+    s += 0b11110000;
+    s += 0b10000000;
+    s += 0b10010000;
+    s += 0b10100000;
+    EXPECT_EQ(2, Index::RepairUtf8(&s));
+    string r("__");
+    r += 0b11010000;
+    r += 0b10100000;
+    EXPECT_EQ(r, s);
+  }
+  {
+    // 4-byte sequence, can be reduced to 1
+    string s;
+    s += 0b11110000;
+    s += 0b10000000;
+    s += 0b10000001;
+    s += 0b10100000;
+    EXPECT_EQ(3, Index::RepairUtf8(&s));
+    string r("___");
+    r += 0b01100000;
     EXPECT_EQ(r, s);
   }
 }
