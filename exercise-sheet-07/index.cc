@@ -41,8 +41,8 @@ int Index::RepairUtf8(string* s) {
         *next = (*next | ((*c & 1u) << 6)) & 0b01111111;
         ++num_repaired;
         c += 2;
-      } else if (!((*c << seq_len) & 255u) &&
-                 !((128u >> (seq_len - 1)) & *next)) {
+      } else if (((*c << seq_len) & 255u) == 0 &&
+                 ((128u >> (seq_len - 1)) & *next) == 0) {
         // Overlong sequence, move sequence start to the next byte.
         *c = kUtf8RepairReplace;
         *next = (((seq_len & 0b0110) + 10u) << 4) | *next;
