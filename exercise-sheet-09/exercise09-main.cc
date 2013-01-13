@@ -91,16 +91,13 @@ int main(int argc, char** argv) {
   auto start = Clock();
   Index::AddRecordsFromCsv(ReadFile(args[0]), &index);
   index.ComputeScores(bm25_b, bm25_k);
+  KMeansClustering cluster(index);
+  cluster.ConstructMatrix();
   auto end = Clock();
-  Profiler::Stop();
-  auto diff = end - start;
   cout << "Number of records: " << index.NumRecords()
        << "\nNumber of items: " << index.NumItems()
-       << "\nIndex construction time: " << diff
+       << "\nIndex construction time: " << end - start
        << "\nBM25 parameters: b = " << bm25_b << ", k = " << bm25_k
        << endl;
-  KMeansClustering cluster(index);
-  index.ComputeScores(bm25_b, bm25_k);
-
   return 0;
 }
