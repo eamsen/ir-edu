@@ -3,6 +3,7 @@
 #include <cassert>
 #include <algorithm>
 #include <iostream>
+#include <limits>
 #include "./index.h"
 
 using std::vector;
@@ -24,47 +25,12 @@ void KMeansClustering::Truncate(const size_t m, vector<IdScore>* vec) {
   std::sort(vec->begin(), vec->end());
 }
 
-float Norm(const vector<KMeansClustering::IdScore>& vec) {
-  float sum2 = 0.0f;
-  for (const KMeansClustering::IdScore& idsc: vec) {
-    sum2 += idsc.score * idsc.score;
-  }
-  return std::sqrt(sum2);
-}
-
-// vector<IdScore> DiffSq(const vector<IdScore>& vec1,
-//                        const vector<IdScore>& vec2) {
-//   auto it1 = vec1.begin();
-//   const auto end1 = vec1.end();
-//   auto it2 = vec2.begin();
-//   const auto end2 = vec2.end();
-//   vector<IdScore> result;
-//   result.reserve(vec1.size() + vec2.size());
-//   while (it1 != end1 && it2 != end2) {
-//     while (it1 != end1 && *it1 < *it2) {
-//       result.push_back(it1->score * it1->score);
-//       ++it1;
-//     }
-//     if (it1 == end1) {
-//       break;
-//     }
-//     while (it2 != end2 && *it2 < *it1) {
-//       result.push_back(it2->score * it2->score);
-//       ++it2;
-//     }
-//     while (it1 != end1 && it2 != end2 && *it1 == *it2) {
-//       const float diff = it1->score - it2->score;
-//       result.push_back(diff * diff);
-//       ++it1;
-//       ++it2;
-//     }
-//   }
-//   return result;
-// }
-
-
 void KMeansClustering::Normalize(vector<IdScore>* vec) {
-  const float norm = Norm(*vec);
+  float norm = 0.0f;
+  for (const KMeansClustering::IdScore& idsc: *vec) {
+    norm += idsc.score * idsc.score;
+  }
+  norm = std::sqrt(norm);
   if (norm == 0.0f) {
     return;
   }
@@ -135,28 +101,60 @@ void KMeansClustering::ConstructMatrix() {
   }
 }
 
-auto KMeansClustering::RandomCentroids(const size_t k, const size_t m) const
+int KMeansClustering::NextFarthestCentroid(
+    const vector<vector<IdScore> >& centroids) const {
+  const size_t num_records = record_matrix_.size();
+  int farthest_id = 0;
+  float farthest_dist = 0.0f;
+  for (size_t r = 0; r < num_records; ++r) {
+    float closest_dist = std::numeric_limits<float>::max();
+    for (const vector<IdScore>& vec: centroids) {
+      const float dist = Distance(RecordVector(r), vec);
+      closest_dist = std::min(closest_dist, dist);
+    }
+    if (closest_dist > farthest_dist) {
+      farthest_id = r;
+      farthest_dist = closest_dist;
+    }
+  }
+  return farthest_id;
+}
+
+auto KMeansClustering::FarthestCentroids(const size_t k) const
     -> vector<vector<IdScore> > {
+  const size_t num_records = record_matrix_.size();
   vector<vector<IdScore> > centroids;
   centroids.reserve(k);
-  for (size_t i = 0; i < k; ++i) {
-    centroids.push_back(record_matrix_[i]);
-    // centroids.push_back({});
-    // centroids.back().reserve(m);
-    // for (size_t j = 0; j < m; ++j) {
-    //   centroids.back().push_back({j, j});
-    // }
+  const int initial_centroid = num_records / 73;
+  centroids.push_back(RecordVector(initial_centroid));
+  for (size_t c = 1; c < k; ++c) {
+    const int next_id = NextFarthestCentroid(centroids);
+    centroids.push_back(RecordVector(next_id));
   }
   return centroids;
 }
 
-void KMeansClustering::ComputeClustering(const size_t k, const size_t m,
-                                         const float min_roc) {
+auto KMeansClustering::RandomCentroids(const size_t k) const
+    -> vector<vector<IdScore> > {
+  vector<vector<IdScore> > centroids;
+  centroids.reserve(k);
+  const size_t step = record_matrix_.size() / k;
+  for (size_t i = 0; i < k; ++i) {
+    // That's random.
+    centroids.push_back(record_matrix_[i * step]);
+  }
+  return centroids;
+}
+
+void KMeansClustering::ComputeClustering(
+    const size_t k, const size_t m, const float min_roc,
+    const size_t max_num_iter) {
   for (vector<IdScore>& vec: record_matrix_) {
-    Truncate(m, &vec);
+    // Truncate(m, &vec);
     Normalize(&vec);
   }
-  vector<vector<IdScore> > centroids = RandomCentroids(k, m);
+  vector<vector<IdScore> > centroids = FarthestCentroids(k);
+  // vector<vector<IdScore> > centroids = RandomCentroids(k);
   for (vector<IdScore>& vec: centroids) {
     Truncate(m, &vec);
     Normalize(&vec);
@@ -166,20 +164,23 @@ void KMeansClustering::ComputeClustering(const size_t k, const size_t m,
     float rss = 0.0f;
     for (size_t end = clusters.size(), c = 0; c < end; ++c) {
       for (const int record: clusters[c]) {
-        rss += Distance(centroids[c], this->RecordVector(record));
+        const float dist = Distance(centroids[c], this->RecordVector(record));
+        rss += dist * dist;
       }
     }
     return rss;
   };
 
-  size_t num_iterations = 10000;
-  float prev_rss = 9999999999.0f;
-  while (num_iterations--) {
+  size_t num_iter = 0;
+  float prev_rss = std::numeric_limits<float>::max();
+  while (num_iter++ < max_num_iter) {
+    clusters.clear();
+    clusters.resize(k);
     for (size_t end = record_matrix_.size(), r = 0; r < end; ++r) {
       int best_id = 0;
       float best_dist = 1.1f;
       for (size_t c = 0; c < k; ++c) {
-        float dist = Distance(record_matrix_[r], centroids[c]);
+        const float dist = Distance(record_matrix_[r], centroids[c]);
         if (dist < best_dist) {
           best_dist = dist;
           best_id = c;
@@ -188,13 +189,22 @@ void KMeansClustering::ComputeClustering(const size_t k, const size_t m,
       clusters[best_id].push_back(r);
     }
     for (size_t c = 0; c < k; ++c) {
-      centroids[c] = Average(clusters[c]);
+      if (clusters[c].size()) {
+        centroids[c] = Average(clusters[c]);
+      } else {
+        centroids[c] = RecordVector(NextFarthestCentroid(centroids));
+      }
+      Truncate(m, &centroids[c]);
+      Normalize(&centroids[c]);
     }
     const float rss = Rss();
+    assert(rss <= prev_rss);
     if (prev_rss - rss < min_roc) {
       break;
     }
-    std::cout << "\r" << rss << "                    " << std::flush;
+    std::cout << "\rIteration: " << num_iter
+              << "; RSS: " << rss
+              << "         " << std::flush;
     prev_rss = rss;
   }
   std::cout << std::endl;

@@ -79,17 +79,23 @@ int main(int argc, char** argv) {
   using std::endl;
   using std::flush;
 
-  // Parse command line arguments.
-  vector<string> args(&argv[1], &argv[argc]);
-  if (args.size() != 1) {
-    cout << "Usage: exercise05-main <CSV-file>" << endl;
-    return 1;
-  }
   float bm25_b = 0.75f;
   float bm25_k = 1.75f;
+  size_t k = 50;
+  size_t m = 1000;
+  size_t max_num_iter = 100;
+  float min_roc = 0.1f;
+  // Parse command line arguments.
+  if (argc < 2) {
+    cout << "Usage: exercise05-main <CSV-file> [max-num-iterations]" << endl;
+    return 1;
+  }
+  if (argc > 2) {
+    std::stringstream(argv[2]) >> max_num_iter;
+  }
   Index index;
   auto start = Clock();
-  Index::AddRecordsFromCsv(ReadFile(args[0]), &index);
+  Index::AddRecordsFromCsv(ReadFile(argv[1]), &index);
   index.ComputeScores(bm25_b, bm25_k);
   KMeansClustering cluster(index);
   cluster.ConstructMatrix();
@@ -99,9 +105,8 @@ int main(int argc, char** argv) {
        << "\nIndex construction time: " << end - start
        << "\nBM25 parameters: b = " << bm25_b << ", k = " << bm25_k
        << endl;
-  cout << "Computing clustering..." << flush;
-  size_t k = 50;
-  size_t m = 1000;
-  cluster.ComputeClustering(k, m, 0.1f);
+  start = Clock();
+  cluster.ComputeClustering(k, m, min_roc, max_num_iter);
+  cout << Clock() - start << endl;
   return 0;
 }
