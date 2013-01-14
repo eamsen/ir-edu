@@ -99,5 +99,9 @@ int main(int argc, char** argv) {
        << "\nIndex construction time: " << end - start
        << "\nBM25 parameters: b = " << bm25_b << ", k = " << bm25_k
        << endl;
+  cout << "Computing clustering..." << flush;
+  size_t k = 50;
+  size_t m = 1000;
+  cluster.ComputeClustering(k, m, 0.1f);
   return 0;
 }

@@ -2,15 +2,20 @@
 #include "./k-means-clustering.h"
 #include <cassert>
 #include <algorithm>
+#include <iostream>
 #include "./index.h"
 
 using std::vector;
 
+const int KMeansClustering::kInvalidId = -1;
+
 KMeansClustering::KMeansClustering(const Index& index)
     : index_(index) {}
 
-void KMeansClustering::Truncate(size_t m, vector<IdScore>* vec) {
-  m = std::min(m, vec->size());
+void KMeansClustering::Truncate(const size_t m, vector<IdScore>* vec) {
+  if (vec->size() <= m) {
+    return;
+  }
   std::partial_sort(vec->begin(), vec->begin() + m, vec->end(),
       [](const IdScore& lhs, const IdScore& rhs) {
     return lhs.score > rhs.score || (lhs.score == rhs.score && lhs < rhs);
@@ -27,6 +32,37 @@ float Norm(const vector<KMeansClustering::IdScore>& vec) {
   return std::sqrt(sum2);
 }
 
+// vector<IdScore> DiffSq(const vector<IdScore>& vec1,
+//                        const vector<IdScore>& vec2) {
+//   auto it1 = vec1.begin();
+//   const auto end1 = vec1.end();
+//   auto it2 = vec2.begin();
+//   const auto end2 = vec2.end();
+//   vector<IdScore> result;
+//   result.reserve(vec1.size() + vec2.size());
+//   while (it1 != end1 && it2 != end2) {
+//     while (it1 != end1 && *it1 < *it2) {
+//       result.push_back(it1->score * it1->score);
+//       ++it1;
+//     }
+//     if (it1 == end1) {
+//       break;
+//     }
+//     while (it2 != end2 && *it2 < *it1) {
+//       result.push_back(it2->score * it2->score);
+//       ++it2;
+//     }
+//     while (it1 != end1 && it2 != end2 && *it1 == *it2) {
+//       const float diff = it1->score - it2->score;
+//       result.push_back(diff * diff);
+//       ++it1;
+//       ++it2;
+//     }
+//   }
+//   return result;
+// }
+
+
 void KMeansClustering::Normalize(vector<IdScore>* vec) {
   const float norm = Norm(*vec);
   if (norm == 0.0f) {
@@ -37,28 +73,27 @@ void KMeansClustering::Normalize(vector<IdScore>* vec) {
   }
 }
 
-float KMeansClustering::Distance(const int r1, const int r2) const {
-  const auto& r1_vec = RecordVector(r1);
-  auto r1_it = r1_vec.begin();
-  const auto r1_end = r1_vec.cend();
-  const auto& r2_vec = RecordVector(r2);
-  auto r2_it = r2_vec.begin();
-  const auto r2_end = r2_vec.cend();
-  float dist = 1;
-  while (r1_it != r1_end && r2_it != r2_end) {
-    while (r1_it != r1_end && *r1_it < *r2_it) {
-      ++r1_it;
+float KMeansClustering::Distance(const vector<IdScore>& v1,
+                                 const vector<IdScore>& v2) const {
+  auto it1 = v1.begin();
+  const auto end1 = v1.end();
+  auto it2 = v2.begin();
+  const auto end2 = v2.end();
+  float dist = 1.0f;
+  while (it1 != end1 && it2 != end2) {
+    while (it1 != end1 && *it1 < *it2) {
+      ++it1;
     }
-    if (r1_it == r1_end) {
+    if (it1 == end1) {
       break;
     }
-    while (r2_it != r2_end && *r2_it < *r1_it) {
-      ++r2_it;
+    while (it2 != end2 && *it2 < *it1) {
+      ++it2;
     }
-    while (r1_it != r1_end && r2_it != r2_end && *r1_it == *r2_it) {
-      dist -= r1_it->score * r2_it->score;
-      ++r1_it;
-      ++r2_it;
+    while (it1 != end1 && it2 != end2 && *it1 == *it2) {
+      dist -= it1->score * it2->score;
+      ++it1;
+      ++it2;
     }
   }
   return dist;
@@ -88,7 +123,6 @@ auto KMeansClustering::Average(const vector<int>& records) const
   return avg;
 }
 
-
 void KMeansClustering::ConstructMatrix() {
   const int num_records = index_.NumRecords();
   const int num_keywords = index_.NumKeywords();
@@ -99,6 +133,71 @@ void KMeansClustering::ConstructMatrix() {
       record_matrix_[item.record_id].push_back({k, item.score});
     }
   }
+}
+
+auto KMeansClustering::RandomCentroids(const size_t k, const size_t m) const
+    -> vector<vector<IdScore> > {
+  vector<vector<IdScore> > centroids;
+  centroids.reserve(k);
+  for (size_t i = 0; i < k; ++i) {
+    centroids.push_back(record_matrix_[i]);
+    // centroids.push_back({});
+    // centroids.back().reserve(m);
+    // for (size_t j = 0; j < m; ++j) {
+    //   centroids.back().push_back({j, j});
+    // }
+  }
+  return centroids;
+}
+
+void KMeansClustering::ComputeClustering(const size_t k, const size_t m,
+                                         const float min_roc) {
+  for (vector<IdScore>& vec: record_matrix_) {
+    Truncate(m, &vec);
+    Normalize(&vec);
+  }
+  vector<vector<IdScore> > centroids = RandomCentroids(k, m);
+  for (vector<IdScore>& vec: centroids) {
+    Truncate(m, &vec);
+    Normalize(&vec);
+  }
+  vector<vector<int> > clusters(k);
+  auto Rss = [this, &centroids, &clusters]() -> float {
+    float rss = 0.0f;
+    for (size_t end = clusters.size(), c = 0; c < end; ++c) {
+      for (const int record: clusters[c]) {
+        rss += Distance(centroids[c], this->RecordVector(record));
+      }
+    }
+    return rss;
+  };
+
+  size_t num_iterations = 10000;
+  float prev_rss = 9999999999.0f;
+  while (num_iterations--) {
+    for (size_t end = record_matrix_.size(), r = 0; r < end; ++r) {
+      int best_id = 0;
+      float best_dist = 1.1f;
+      for (size_t c = 0; c < k; ++c) {
+        float dist = Distance(record_matrix_[r], centroids[c]);
+        if (dist < best_dist) {
+          best_dist = dist;
+          best_id = c;
+        }
+      }
+      clusters[best_id].push_back(r);
+    }
+    for (size_t c = 0; c < k; ++c) {
+      centroids[c] = Average(clusters[c]);
+    }
+    const float rss = Rss();
+    if (prev_rss - rss < min_roc) {
+      break;
+    }
+    std::cout << "\r" << rss << "                    " << std::flush;
+    prev_rss = rss;
+  }
+  std::cout << std::endl;
 }
 
 auto KMeansClustering::RecordVector(const int record_id) const

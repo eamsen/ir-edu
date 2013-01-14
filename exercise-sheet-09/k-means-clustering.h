@@ -20,14 +20,18 @@ class KMeansClustering {
       return id == rhs.id;
     }
   };
-
+  static const int kInvalidId;
   static void Truncate(size_t m, std::vector<IdScore>* vec);
   static void Normalize(std::vector<IdScore>* vec);
 
   explicit KMeansClustering(const Index& index);
-  float Distance(const int r1, const int r2) const;
+  float Distance(const std::vector<IdScore>& v1,
+                 const std::vector<IdScore>& v2) const;
   std::vector<IdScore> Average(const std::vector<int>& records) const;
   void ConstructMatrix();
+  void ComputeClustering(const size_t k, const size_t m, const float min_roc);
+  std::vector<std::vector<IdScore> > RandomCentroids(const size_t k,
+                                                     const size_t m) const;
   const std::vector<IdScore>& RecordVector(const int record_id) const;
 
  private:
