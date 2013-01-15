@@ -45,24 +45,24 @@ float KMeansClustering::Distance(const vector<IdScore>& v1,
   const auto end1 = v1.end();
   auto it2 = v2.begin();
   const auto end2 = v2.end();
-  float dist = 1.0f;
+  float dist = 0.0f;
   while (it1 != end1 && it2 != end2) {
-    while (it1 != end1 && *it1 < *it2) {
+    while (it1 != end1 && it1->id < it2->id) {
       ++it1;
     }
     if (it1 == end1) {
       break;
     }
-    while (it2 != end2 && *it2 < *it1) {
+    while (it2 != end2 && it2->id < it1->id) {
       ++it2;
     }
-    while (it1 != end1 && it2 != end2 && *it1 == *it2) {
-      dist -= it1->score * it2->score;
+    while (it1 != end1 && it2 != end2 && it1->id == it2->id) {
+      dist += it1->score * it2->score;
       ++it1;
       ++it2;
     }
   }
-  return dist;
+  return 1.0f - dist;
 }
 
 auto KMeansClustering::Average(const vector<int>& records) const
@@ -159,26 +159,17 @@ void KMeansClustering::ComputeClustering(
     Truncate(m, &vec);
     Normalize(&vec);
   }
+  size_t num_records = record_matrix_.size();
   vector<vector<int> > clusters(k);
-  auto Rss = [this, &centroids, &clusters]() -> float {
-    float rss = 0.0f;
-    for (size_t end = clusters.size(), c = 0; c < end; ++c) {
-      for (const int record: clusters[c]) {
-        const float dist = Distance(centroids[c], this->RecordVector(record));
-        rss += dist * dist;
-      }
-    }
-    return rss;
-  };
-
   size_t num_iter = 0;
   float prev_rss = std::numeric_limits<float>::max();
   while (num_iter++ < max_num_iter) {
+    float rss = 0.0f;
     clusters.clear();
     clusters.resize(k);
-    for (size_t end = record_matrix_.size(), r = 0; r < end; ++r) {
+    for (size_t r = 0; r < num_records; ++r) {
       int best_id = 0;
-      float best_dist = 1.1f;
+      float best_dist = std::numeric_limits<float>::max();
       for (size_t c = 0; c < k; ++c) {
         const float dist = Distance(record_matrix_[r], centroids[c]);
         if (dist < best_dist) {
@@ -187,7 +178,16 @@ void KMeansClustering::ComputeClustering(
         }
       }
       clusters[best_id].push_back(r);
+      rss += best_dist * best_dist;
     }
+    assert(rss <= prev_rss);
+    if (prev_rss - rss < min_roc) {
+      break;
+    }
+    std::cout << "\rIteration: " << num_iter
+              << "; RSS: " << rss
+              << "         " << std::flush;
+    prev_rss = rss;
     for (size_t c = 0; c < k; ++c) {
       if (clusters[c].size()) {
         centroids[c] = Average(clusters[c]);
@@ -197,15 +197,6 @@ void KMeansClustering::ComputeClustering(
       Truncate(m, &centroids[c]);
       Normalize(&centroids[c]);
     }
-    const float rss = Rss();
-    assert(rss <= prev_rss);
-    if (prev_rss - rss < min_roc) {
-      break;
-    }
-    std::cout << "\rIteration: " << num_iter
-              << "; RSS: " << rss
-              << "         " << std::flush;
-    prev_rss = rss;
   }
   std::cout << std::endl;
 }

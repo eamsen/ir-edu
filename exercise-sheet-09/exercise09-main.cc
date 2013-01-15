@@ -106,7 +106,9 @@ int main(int argc, char** argv) {
        << "\nBM25 parameters: b = " << bm25_b << ", k = " << bm25_k
        << endl;
   start = Clock();
+  Profiler::Start("clustering.prof");
   cluster.ComputeClustering(k, m, min_roc, max_num_iter);
+  Profiler::Stop();
   cout << Clock() - start << endl;
   return 0;
 }
