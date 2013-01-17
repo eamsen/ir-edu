@@ -31,13 +31,15 @@ class KMeansClustering {
   void ConstructMatrix();
   void ComputeClustering(const size_t k, const size_t m, const float min_roc,
                          const size_t max_num_iter);
+  std::vector<std::vector<IdScore> > PPCentroids(const size_t k) const;
   std::vector<std::vector<IdScore> > FarthestCentroids(const size_t k) const;
   std::vector<std::vector<IdScore> > RandomCentroids(const size_t k) const;
   const std::vector<IdScore>& RecordVector(const int record_id) const;
 
  private:
-  int NextFarthestCentroid(const std::vector<std::vector<IdScore> >& centroids)
-      const;
+  int NextFarthestCentroid(
+      const std::vector<std::vector<IdScore> >& centroids,
+      std::vector<float>* dists=0) const;
 
   const Index& index_;
   std::vector<std::vector<IdScore> > record_matrix_;
