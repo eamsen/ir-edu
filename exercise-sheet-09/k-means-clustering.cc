@@ -127,36 +127,35 @@ int KMeansClustering::NextFarthestCentroid(
 auto KMeansClustering::PPCentroids(const size_t k) const
     -> vector<vector<IdScore> > {
   std::mt19937 engine;
+  engine.seed(7355);
   const size_t num_records = record_matrix_.size();
   vector<vector<IdScore> > centroids;
   centroids.reserve(k);
   const int initial_centroid = ((num_records % 73) * 253) % num_records;
   centroids.push_back(RecordVector(initial_centroid));
-  const float prob_gain = 30.0f;
-  vector<int> records;
-  records.reserve(num_records * prob_gain);
-  std::uniform_int_distribution<int> rand(0, records.capacity());
+  vector<float> probs;
+  probs.reserve(num_records);
   for (size_t c = 1; c < k; ++c) {
     vector<float> dists(num_records);
-    int next_id = NextFarthestCentroid(centroids, &dists);
-    const float max_dist = dists[next_id] * dists[next_id];
-    // const float prob_factor = prob_gain - (dists[next_id] * dists[next_id]);
-    records.clear();
+    NextFarthestCentroid(centroids, &dists);
+    probs.clear();
     for (size_t r = 0; r < num_records; ++r) {
-      const int prob = dists[r] * dists[r] * prob_gain - max_dist;
-      if (prob > 0) {
-        records.insert(records.end(), prob, r);
-      }
+      const float prob = 10000.0f * dists[r] * dists[r] +
+          (probs.size() ? probs.back() : 0.0f);
+      probs.push_back(prob);  
     }
-    std::cout << "\r" << c << "/" << k
-              << "; " << records.size() << "/" << int(num_records * prob_gain)
-              << "      " << std::flush;
-    next_id = rand(engine);
-    while (next_id >= static_cast<int>(records.size())) {
-      next_id = rand(engine);
+    const float next = std::uniform_real_distribution<float>(0,
+        probs.back())(engine);
+    std::cout << "\rSeeded " << c << "/" << k
+              << ": " << next << "/" << probs.back()
+              << "     " << std::flush;
+    int r = 0;
+    while (probs[r] < next) {
+      ++r;
     }
-    centroids.push_back(RecordVector(records[next_id]));
+    centroids.push_back(RecordVector(r));
   }
+  std::cout << "\r                                        ";
   return centroids;
 }
 
@@ -190,7 +189,7 @@ void KMeansClustering::ComputeClustering(
     const size_t k, const size_t m, const float min_roc,
     const size_t max_num_iter) {
   for (vector<IdScore>& vec: record_matrix_) {
-    Truncate(m, &vec);
+    // Truncate(m, &vec);
     Normalize(&vec);
   }
   vector<vector<IdScore> > centroids = PPCentroids(k);
