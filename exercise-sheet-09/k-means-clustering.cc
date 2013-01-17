@@ -192,32 +192,31 @@ void KMeansClustering::ComputeClustering(
     // Truncate(m, &vec);
     Normalize(&vec);
   }
-  vector<vector<IdScore> > centroids = PPCentroids(k);
-  // vector<vector<IdScore> > centroids = FarthestCentroids(k);
-  // vector<vector<IdScore> > centroids = RandomCentroids(k);
-  for (vector<IdScore>& vec: centroids) {
+  centroids_ = PPCentroids(k);
+  // centroids_ = FarthestCentroids(k);
+  // centroids_ = RandomCentroids(k);
+  for (vector<IdScore>& vec: centroids_) {
     Truncate(m, &vec);
     Normalize(&vec);
   }
   size_t num_records = record_matrix_.size();
-  vector<vector<int> > clusters(k);
   size_t num_iter = 0;
   float prev_rss = std::numeric_limits<float>::max();
   while (num_iter++ < max_num_iter) {
     float rss = 0.0f;
-    clusters.clear();
-    clusters.resize(k);
+    clusters_.clear();
+    clusters_.resize(k);
     for (size_t r = 0; r < num_records; ++r) {
       int best_id = 0;
       float best_dist = std::numeric_limits<float>::max();
       for (size_t c = 0; c < k; ++c) {
-        const float dist = Distance(record_matrix_[r], centroids[c]);
+        const float dist = Distance(record_matrix_[r], centroids_[c]);
         if (dist < best_dist) {
           best_dist = dist;
           best_id = c;
         }
       }
-      clusters[best_id].push_back(r);
+      clusters_[best_id].push_back(r);
       rss += best_dist * best_dist;
     }
     assert(rss <= prev_rss);
@@ -228,16 +227,26 @@ void KMeansClustering::ComputeClustering(
               << "; RSS: " << rss << "    " << std::flush;
     prev_rss = rss;
     for (size_t c = 0; c < k; ++c) {
-      if (clusters[c].size()) {
-        centroids[c] = Average(clusters[c]);
+      if (clusters_[c].size()) {
+        centroids_[c] = Average(clusters_[c]);
       } else {
-        centroids[c] = RecordVector(NextFarthestCentroid(centroids));
+        centroids_[c] = RecordVector(NextFarthestCentroid(centroids_));
       }
-      Truncate(m, &centroids[c]);
-      Normalize(&centroids[c]);
+      Truncate(m, &centroids_[c]);
+      Normalize(&centroids_[c]);
     }
   }
   std::cout << std::endl;
+}
+
+auto KMeansClustering::Centroid(const int id) const -> const vector<IdScore>& {
+  assert(id > -1 && id < static_cast<int>(centroids_.size()));
+  return centroids_[id];
+}
+
+auto KMeansClustering::Cluster(const int id) const -> const vector<int>& {
+  assert(id > -1 && id < static_cast<int>(cluster_.size()));
+  return clusters_[id];
 }
 
 auto KMeansClustering::RecordVector(const int record_id) const

@@ -35,6 +35,8 @@ class KMeansClustering {
   std::vector<std::vector<IdScore> > FarthestCentroids(const size_t k) const;
   std::vector<std::vector<IdScore> > RandomCentroids(const size_t k) const;
   const std::vector<IdScore>& RecordVector(const int record_id) const;
+  const std::vector<IdScore>& Centroid(const int id) const;
+  const std::vector<int>& Cluster(const int id) const;
 
  private:
   int NextFarthestCentroid(
@@ -43,6 +45,8 @@ class KMeansClustering {
 
   const Index& index_;
   std::vector<std::vector<IdScore> > record_matrix_;
+  std::vector<std::vector<IdScore> > centroids_;
+  std::vector<std::vector<int> > clusters_;
 };
 
 #endif  // EXERCISE_SHEET_09_K_MEANS_CLUSTERING_H_

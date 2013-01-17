@@ -8,6 +8,7 @@
 #include <queue>
 #include <limits>
 #include <functional>
+#include <algorithm>
 #include <cmath>
 #include "./index.h"
 #include "./profiler.h"
@@ -110,5 +111,21 @@ int main(int argc, char** argv) {
   cluster.ComputeClustering(k, m, min_roc, max_num_iter);
   Profiler::Stop();
   cout << Clock() - start << endl;
+  std::ofstream cluster_file("clusters.txt");
+  for (size_t c = 0; c < k; ++c) {
+    auto centroid = cluster.Centroid(c);
+    std::sort(centroid.begin(), centroid.end(),
+        [](const KMeansClustering::IdScore& lhs,
+           const KMeansClustering::IdScore& rhs) {
+      return lhs.score > rhs.score;
+    });
+    for (size_t t = 0; t < std::min(10u, centroid.size()); ++t) {
+      if (t > 0) {
+        cluster_file << ", ";
+      }
+      cluster_file << index.KeywordById(centroid[t].id).name;
+    }
+    cluster_file << "\n";
+  }
   return 0;
 }
