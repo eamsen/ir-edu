@@ -21,8 +21,8 @@ using std::string;
 // 0: all off, 1: bold, 4: underscore, 5: blinking, 7: reversed, 8: concealed
 // 3x: text, 4x: background
 // 0: black, 1: red, 2: green, 3: yellow, 4: blue, 5: magenta, 6: cyan, 7: white
-static const char* kResetMode = "\033[0m";
-static const char* kBoldText = "\033[1m";
+// static const char* kResetMode = "\033[0m";
+// static const char* kBoldText = "\033[1m";
 // static const char* kUnderscoreText = "\033[4m";
 // The default n-gram value for n.
 static const int kNGramN = 3;
@@ -108,9 +108,12 @@ int main(int argc, char** argv) {
        << endl;
   start = Clock();
   Profiler::Start("clustering.prof");
-  cluster.ComputeClustering(k, m, min_roc, max_num_iter);
+  const float rss = cluster.ComputeClustering(k, m, min_roc, max_num_iter);
   Profiler::Stop();
-  cout << Clock() - start << endl;
+  cout << "Number of iterations: " << cluster.LastNumIters() << endl;
+  cout << "Final RSS: " << rss << endl;
+  cout << "Clustering time: " << Clock() - start << endl;
+  // Output the clusters.
   std::ofstream cluster_file("clusters.txt");
   for (size_t c = 0; c < k; ++c) {
     auto centroid = cluster.Centroid(c);

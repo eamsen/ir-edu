@@ -1,10 +1,10 @@
 // Copyright 2013 Eugen Sawin <esawin@me73.com>
 #include "./k-means-clustering.h"
+#include <random>
 #include <cassert>
 #include <algorithm>
 #include <iostream>
 #include <limits>
-#include <random>
 #include "./index.h"
 
 using std::vector;
@@ -41,7 +41,7 @@ void KMeansClustering::Normalize(vector<IdScore>* vec) {
 }
 
 float KMeansClustering::Distance(const vector<IdScore>& v1,
-                                 const vector<IdScore>& v2) const {
+                                 const vector<IdScore>& v2) {
   auto it1 = v1.begin();
   const auto end1 = v1.end();
   auto it2 = v2.begin();
@@ -127,6 +127,7 @@ int KMeansClustering::NextFarthestCentroid(
 auto KMeansClustering::PPCentroids(const size_t k) const
     -> vector<vector<IdScore> > {
   std::mt19937 engine;
+  // Just a random number.
   engine.seed(7355);
   const size_t num_records = record_matrix_.size();
   vector<vector<IdScore> > centroids;
@@ -137,25 +138,31 @@ auto KMeansClustering::PPCentroids(const size_t k) const
   probs.reserve(num_records);
   for (size_t c = 1; c < k; ++c) {
     vector<float> dists(num_records);
+    // Get all distances.
     NextFarthestCentroid(centroids, &dists);
     probs.clear();
     for (size_t r = 0; r < num_records; ++r) {
+      // Populate the vector with values, each value stands for the range for
+      // the given record.
+      // 9999 is better than 0.9999, because more is always better!
       const float prob = 10000.0f * dists[r] * dists[r] +
           (probs.size() ? probs.back() : 0.0f);
-      probs.push_back(prob);  
+      probs.push_back(prob);
     }
+    // Pick the winning value.
     const float next = std::uniform_real_distribution<float>(0,
         probs.back())(engine);
     std::cout << "\rSeeded " << c << "/" << k
               << ": " << next << "/" << probs.back()
               << "     " << std::flush;
+    // Find the winning record, whose range contains the picked value.
     int r = 0;
     while (probs[r] < next) {
       ++r;
     }
     centroids.push_back(RecordVector(r));
   }
-  std::cout << "\r                                        ";
+  std::cout << "\r                                                    " << "\r";
   return centroids;
 }
 
@@ -185,10 +192,12 @@ auto KMeansClustering::RandomCentroids(const size_t k) const
   return centroids;
 }
 
-void KMeansClustering::ComputeClustering(
+float KMeansClustering::ComputeClustering(
     const size_t k, const size_t m, const float min_roc,
     const size_t max_num_iter) {
+  num_iters_ = 0u;
   for (vector<IdScore>& vec: record_matrix_) {
+    // Don't truncate the original vectors, that might degrade the final result.
     // Truncate(m, &vec);
     Normalize(&vec);
   }
@@ -199,44 +208,54 @@ void KMeansClustering::ComputeClustering(
     Truncate(m, &vec);
     Normalize(&vec);
   }
-  size_t num_records = record_matrix_.size();
-  size_t num_iter = 0;
   float prev_rss = std::numeric_limits<float>::max();
-  while (num_iter++ < max_num_iter) {
-    float rss = 0.0f;
-    clusters_.clear();
-    clusters_.resize(k);
-    for (size_t r = 0; r < num_records; ++r) {
-      int best_id = 0;
-      float best_dist = std::numeric_limits<float>::max();
-      for (size_t c = 0; c < k; ++c) {
-        const float dist = Distance(record_matrix_[r], centroids_[c]);
-        if (dist < best_dist) {
-          best_dist = dist;
-          best_id = c;
-        }
-      }
-      clusters_[best_id].push_back(r);
-      rss += best_dist * best_dist;
-    }
+  while (num_iters_ < max_num_iter) {
+    ++num_iters_;
+    const float rss = UpdateClusters(k);
     assert(rss <= prev_rss);
     if (prev_rss - rss < min_roc) {
       break;
     }
-    std::cout << "\rIteration: " << num_iter
+    std::cout << "\rIteration: " << num_iters_
               << "; RSS: " << rss << "    " << std::flush;
     prev_rss = rss;
-    for (size_t c = 0; c < k; ++c) {
-      if (clusters_[c].size()) {
-        centroids_[c] = Average(clusters_[c]);
-      } else {
-        centroids_[c] = RecordVector(NextFarthestCentroid(centroids_));
-      }
-      Truncate(m, &centroids_[c]);
-      Normalize(&centroids_[c]);
-    }
+    UpdateCentroids(k, m);
   }
-  std::cout << std::endl;
+  std::cout << "\r                                                    " << "\r";
+  return prev_rss;
+}
+
+void KMeansClustering::UpdateCentroids(const size_t k, const size_t m) {
+  for (size_t c = 0; c < k; ++c) {
+    if (clusters_[c].size()) {
+      centroids_[c] = Average(clusters_[c]);
+    } else {
+      centroids_[c] = RecordVector(NextFarthestCentroid(centroids_));
+    }
+    Truncate(m, &centroids_[c]);
+    Normalize(&centroids_[c]);
+  }
+}
+
+float KMeansClustering::UpdateClusters(const size_t k) {
+  clusters_.clear();
+  clusters_.resize(k);
+  const size_t num_records = record_matrix_.size();
+  float rss = 0.0f;
+  for (size_t r = 0; r < num_records; ++r) {
+    int best_id = 0;
+    float best_dist = std::numeric_limits<float>::max();
+    for (size_t c = 0; c < k; ++c) {
+      const float dist = Distance(record_matrix_[r], centroids_[c]);
+      if (dist < best_dist) {
+        best_dist = dist;
+        best_id = c;
+      }
+    }
+    clusters_[best_id].push_back(r);
+    rss += best_dist * best_dist;
+  }
+  return rss;
 }
 
 auto KMeansClustering::Centroid(const int id) const -> const vector<IdScore>& {
@@ -245,7 +264,7 @@ auto KMeansClustering::Centroid(const int id) const -> const vector<IdScore>& {
 }
 
 auto KMeansClustering::Cluster(const int id) const -> const vector<int>& {
-  assert(id > -1 && id < static_cast<int>(cluster_.size()));
+  assert(id > -1 && id < static_cast<int>(clusters_.size()));
   return clusters_[id];
 }
 
@@ -253,4 +272,8 @@ auto KMeansClustering::RecordVector(const int record_id) const
     -> const vector<IdScore>& {
   assert(record_id > -1 && record_id < static_cast<int>(record_matrix_.size()));
   return record_matrix_[record_id];
+}
+
+size_t KMeansClustering::LastNumIters() const {
+  return num_iters_;
 }
