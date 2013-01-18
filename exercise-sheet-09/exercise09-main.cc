@@ -106,13 +106,13 @@ int main(int argc, char** argv) {
        << "\nIndex construction time: " << end - start
        << "\nBM25 parameters: b = " << bm25_b << ", k = " << bm25_k
        << endl;
-  start = Clock();
+  start = Clock(Clock::kThreadCpuTime);
   Profiler::Start("clustering.prof");
   const float rss = cluster.ComputeClustering(k, m, min_roc, max_num_iter);
   Profiler::Stop();
   cout << "Number of iterations: " << cluster.LastNumIters() << endl;
   cout << "Final RSS: " << rss << endl;
-  cout << "Clustering time: " << Clock() - start << endl;
+  cout << "Clustering time: " << Clock(Clock::kThreadCpuTime) - start << endl;
   // Output the clusters.
   std::ofstream cluster_file("clusters.txt");
   for (size_t c = 0; c < k; ++c) {

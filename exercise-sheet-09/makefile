@@ -1,5 +1,5 @@
 CXX:=g++ -std=c++0x
-CFLAGS:=-O3 -Wall
+CFLAGS:=-O3 -Wall -fopenmp
 LIBS:=-lrt
 TESTLIBS:=-lgtest -lgtest_main -lpthread $(LIBS)
 MAIN_BINARIES:=$(basename $(wildcard *main.cc))
@@ -21,7 +21,7 @@ profile: CFLAGS=-Wall -O3 -DPROFILE
 profile: LIBS+=-lprofiler
 profile: clean compile
 
-opt: CFLAGS=-Ofast -flto -mtune=native -DNDEBUG -Wall
+opt: CFLAGS=-Ofast -flto -fopenmp -mtune=native -DNDEBUG -Wall
 opt: clean compile
 
 debug: CFLAGS=-O0 -g

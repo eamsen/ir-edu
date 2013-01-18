@@ -107,6 +107,7 @@ int KMeansClustering::NextFarthestCentroid(
   const size_t num_records = record_matrix_.size();
   int farthest_id = 0;
   float farthest_dist = 0.0f;
+  #pragma omp parallel for
   for (size_t r = 0; r < num_records; ++r) {
     float closest_dist = std::numeric_limits<float>::max();
     for (const vector<IdScore>& vec: centroids) {
@@ -116,9 +117,12 @@ int KMeansClustering::NextFarthestCentroid(
     if (dists) {
       (*dists)[r] = closest_dist;
     }
-    if (closest_dist > farthest_dist) {
-      farthest_id = r;
-      farthest_dist = closest_dist;
+    #pragma omp critical(farthestdistupdate)
+    {
+      if (closest_dist > farthest_dist) {
+        farthest_id = r;
+        farthest_dist = closest_dist;
+      }
     }
   }
   return farthest_id;
@@ -226,6 +230,7 @@ float KMeansClustering::ComputeClustering(
 }
 
 void KMeansClustering::UpdateCentroids(const size_t k, const size_t m) {
+  #pragma omp parallel for
   for (size_t c = 0; c < k; ++c) {
     if (clusters_[c].size()) {
       centroids_[c] = Average(clusters_[c]);
@@ -245,11 +250,15 @@ float KMeansClustering::UpdateClusters(const size_t k) {
   for (size_t r = 0; r < num_records; ++r) {
     int best_id = 0;
     float best_dist = std::numeric_limits<float>::max();
+    #pragma omp parallel for
     for (size_t c = 0; c < k; ++c) {
       const float dist = Distance(record_matrix_[r], centroids_[c]);
-      if (dist < best_dist) {
-        best_dist = dist;
-        best_id = c;
+      #pragma omp critical(bestdistupdate)
+      {
+        if (dist < best_dist) {
+          best_dist = dist;
+          best_id = c;
+        }
       }
     }
     clusters_[best_id].push_back(r);
