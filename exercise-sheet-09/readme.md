@@ -20,3 +20,5 @@ The best performing system (excluding mine) at each category is highlighted.
 es: 22074/10/134
 es: 22015/20/198
 es: 21996/20/345
+
+ab-se: 22232/16/610

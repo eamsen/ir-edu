@@ -142,8 +142,8 @@ auto KMeansClustering::PPCentroids(const size_t k) const
     NextFarthestCentroid(centroids, &dists);
     probs.clear();
     for (size_t r = 0; r < num_records; ++r) {
-      // Populate the vector with values, each value stands for the range for
-      // the given record.
+      // Populate the vector with range values used for the probability
+      // distribution.
       // 9999 is better than 0.9999, because more is always better!
       const float prob = 10000.0f * dists[r] * dists[r] +
           (probs.size() ? probs.back() : 0.0f);
