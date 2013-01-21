@@ -47,4 +47,4 @@ The **minimum rate of change** was set to **0.1**, if possible.
 *ke:* 22102/50/3838s  
 *mb:* 22051/50/3081s  
 *es:* 21996/42/345s  
-*es:* 21996/42/118 `mt`  
+*es:* 21996/42/118s `mt`  
