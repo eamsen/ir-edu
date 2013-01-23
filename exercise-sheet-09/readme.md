@@ -49,7 +49,7 @@ The **minimum rate of change** was set to **0.1**, if possible.
 ### Maximum 20 iterations
 *ab:* 22232/20/699s `mt`  
 *ah:* 22071/20/1328s    
-*cs:* 22041/20/long  `q` 
+*cs:* 22041/20/long  `q`  
 *jm:* 22264/20/long  
 *js:* 22339/20/344s  `p`   
 *jw:* 25182/20/944s `mt`  
