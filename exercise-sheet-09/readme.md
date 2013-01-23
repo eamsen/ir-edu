@@ -18,9 +18,9 @@ structure and since the bottleneck of this application is in the distance
 calculation, which relies on fast iteration over the vectors, the vector is
 strongly favored over the ordered map.
 
-As you can see, the quality results of the same system can vary, this is because
-of the randomazation of the initial centroids. For more predictable and provably
-better results, k-means++ seeding should be prefered.
+The quality results of the same system can vary, this is because of the
+randomization of the initial centroids. For more predictable and provably
+better results, use k-means++ seeding ([example](https://github.com/eamsen/information-retrieval-edu/blob/master/exercise-sheet-09/k-means-clustering.cc#L131)).
 
 ## System Specs
 * CPU: Intel Core i5 750 x3 @2.67GHz (VM)
