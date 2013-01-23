@@ -2,11 +2,8 @@
 #include <cassert>
 #include <iostream>
 #include <string>
-#include <vector>
 #include <fstream>
 #include <sstream>
-#include <queue>
-#include <limits>
 #include <functional>
 #include <algorithm>
 #include <cmath>
@@ -15,17 +12,7 @@
 #include "./clock.h"
 #include "./k-means-clustering.h"
 
-using std::vector;
 using std::string;
-
-// 0: all off, 1: bold, 4: underscore, 5: blinking, 7: reversed, 8: concealed
-// 3x: text, 4x: background
-// 0: black, 1: red, 2: green, 3: yellow, 4: blue, 5: magenta, 6: cyan, 7: white
-// static const char* kResetMode = "\033[0m";
-// static const char* kBoldText = "\033[1m";
-// static const char* kUnderscoreText = "\033[4m";
-// The default n-gram value for n.
-static const int kNGramN = 3;
 
 // Returns the file size of given file. Returns 0, if the file is not found.
 size_t FileSize(const string& path) {
@@ -53,32 +40,11 @@ string ReadFile(const string& path) {
   return content;
 }
 
-// Returns the average duration in microseconds for the execution of given
-// function over given number of iterations.
-template<typename Func>
-Clock::Diff AvgDuration(Func func, const size_t num_iter) {
-  const Clock beg;
-  for (size_t i = 0; i < num_iter; ++i) {
-    func();
-  }
-  return (Clock() - beg) / num_iter;
-}
-
-// Returns the duration in microseconds for the execution of given function.
-template<typename Func>
-Clock::Diff Duration(Func func) {
-  const Clock beg;
-  func();
-  return Clock() - beg;
-}
-
 // Main function.
 int main(int argc, char** argv) {
   using std::cout;
   using std::cin;
-  using std::getline;
   using std::endl;
-  using std::flush;
 
   float bm25_b = 0.75f;
   float bm25_k = 1.75f;
@@ -117,16 +83,12 @@ int main(int argc, char** argv) {
   std::ofstream cluster_file("clusters.txt");
   for (size_t c = 0; c < k; ++c) {
     auto centroid = cluster.Centroid(c);
-    std::sort(centroid.begin(), centroid.end(),
-        [](const KMeansClustering::IdScore& lhs,
-           const KMeansClustering::IdScore& rhs) {
-      return lhs.score > rhs.score;
-    });
-    for (size_t t = 0; t < std::min(10u, centroid.size()); ++t) {
-      if (t > 0) {
+    KMeansClustering::Truncate(10, &centroid);
+    for (auto end = centroid.end(), it = centroid.begin(); it != end; ++it) {
+      if (it != centroid.begin()) {
         cluster_file << ", ";
       }
-      cluster_file << index.KeywordById(centroid[t].id).name;
+      cluster_file << index.KeywordById(it->id).name;
     }
     cluster_file << "\n";
   }

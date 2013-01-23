@@ -118,7 +118,7 @@ int KMeansClustering::NextFarthestCentroid(
       (*dists)[r] = closest_dist;
     }
     #pragma omp critical(farthestdistupdate)
-    {
+    {  // NOLINT
       if (closest_dist > farthest_dist) {
         farthest_id = r;
         farthest_dist = closest_dist;
@@ -201,7 +201,7 @@ float KMeansClustering::ComputeClustering(
     const size_t max_num_iter) {
   num_iters_ = 0u;
   for (vector<IdScore>& vec: record_matrix_) {
-    // Don't truncate the original vectors, that might degrade the final result.
+    // Truncating the original vectors might degrade the final result.
     // Truncate(m, &vec);
     Normalize(&vec);
   }
@@ -254,7 +254,7 @@ float KMeansClustering::UpdateClusters(const size_t k) {
     for (size_t c = 0; c < k; ++c) {
       const float dist = Distance(record_matrix_[r], centroids_[c]);
       #pragma omp critical(bestdistupdate)
-      {
+      {  // NOLINT
         if (dist < best_dist) {
           best_dist = dist;
           best_id = c;
