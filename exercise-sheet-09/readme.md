@@ -28,7 +28,7 @@ better results, k-means++ seeding should be prefered.
 * OS: Ubuntu 12.04 LTS 32bit. 
 * GCC 4.6.3
 
-## Performance Results (not final!)
+## Performance Results
 The **minimum rate of change** was set to **0.1**, if possible.
 
 *Notation: RSS/iterations/duration*
