@@ -11,7 +11,7 @@ The best performing systems (excluding *es*) at each category are marked with
 `p` for best performance and `q` for best quality (RSS value).
 Multithreaded programs are additionally marked with `mt`.
 
-By comparing the execution times the systems by *js* and *es* significantly stand
+By comparing the execution times the systems of *js* and *es* significantly stand
 out from the rest. This is mostly due to using a vector of pairs for the sparse
 vectors, instead of an ordered map. The vector is a very cache-efficient data
 structure and since the bottleneck of this application is in the distance
