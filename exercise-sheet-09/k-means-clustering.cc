@@ -15,6 +15,7 @@ KMeansClustering::KMeansClustering(const Index& index)
     : index_(index) {}
 
 void KMeansClustering::Truncate(const size_t m, vector<IdScore>* vec) {
+  assert(vec);
   if (vec->size() <= m) {
     return;
   }
@@ -27,6 +28,7 @@ void KMeansClustering::Truncate(const size_t m, vector<IdScore>* vec) {
 }
 
 void KMeansClustering::Normalize(vector<IdScore>* vec) {
+  assert(vec);
   float norm = 0.0f;
   for (const KMeansClustering::IdScore& idsc: *vec) {
     norm += idsc.score * idsc.score;

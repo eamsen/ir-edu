@@ -18,6 +18,9 @@ class KMeansClustering {
     bool operator<(const IdScore& rhs) const {
       return id < rhs.id;
     }
+    bool operator==(const IdScore& rhs) const {
+      return id == rhs.id && score == rhs.score;
+    }
   };
 
   // Invalid id value.
@@ -29,7 +32,7 @@ class KMeansClustering {
   // Normalizes the given vector.
   static void Normalize(std::vector<IdScore>* vec);
 
-  // Returns the distance measure between given two record vectors.
+  // Returns the distance measure between given two normalized record vectors.
   static float Distance(const std::vector<IdScore>& v1,
                         const std::vector<IdScore>& v2);
 
